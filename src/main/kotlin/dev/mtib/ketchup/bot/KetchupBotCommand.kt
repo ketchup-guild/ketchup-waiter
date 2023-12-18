@@ -1,12 +1,18 @@
 package dev.mtib.ketchup.bot
 
+import dev.mtib.ketchup.bot.commands.*
+import mu.KotlinLogging
 import org.koin.core.context.startKoin
+import org.koin.dsl.bind
+import org.koin.dsl.binds
 import org.koin.dsl.module
+
+private val logger = KotlinLogging.logger { }
 
 private fun getEnv(name: String): String {
     val value = System.getenv(name)
     if (value == null || value.isBlank()) {
-        println("$name environment variable not set")
+        logger.error("$name environment variable not set")
         System.exit(1)
     }
     return value
@@ -31,10 +37,19 @@ suspend fun main() {
                 single { KetchupBot(get()) }
                 single { BotAuthorizationUrl(get()) }
             },
+            module {
+                single { HelpCommand() } bind Command::class
+                single { PingCommand() } bind Command::class
+                single { AboutCommand() } bind Command::class
+                single { ArchiveEventsCommand() } binds arrayOf(Command::class, AdminCommand::class)
+                single { CreateEventCommand() } bind Command::class
+                single { QuittingCommand() } bind Command::class
+            }
         )
     }.koin
 
-    println(koin.get<BotAuthorizationUrl>().url)
+
+    logger.info(koin.get<BotAuthorizationUrl>().url)
 
     koin.get<KetchupBot>().start()
 }

@@ -9,8 +9,9 @@ import dev.kord.core.on
 import dev.kord.gateway.Intent
 import dev.kord.gateway.Intents
 import dev.kord.gateway.PrivilegedIntent
-import dev.mtib.ketchup.bot.commands.registerPingListener
+import dev.mtib.ketchup.bot.commands.Command
 import mu.KotlinLogging
+import org.koin.mp.KoinPlatform
 
 class KetchupBot(private val token: KetchupBotToken) {
     private val logger = KotlinLogging.logger { }
@@ -25,7 +26,10 @@ class KetchupBot(private val token: KetchupBotToken) {
     suspend fun start() {
         val kord = Kord(token.token)
 
-        kord.registerPingListener()
+        KoinPlatform.getKoin().getAll<Command>().forEach {
+            logger.info { "Registering ${it::class.simpleName}" }
+            it.register(kord)
+        }
 
         @OptIn(PrivilegedIntent::class)
         kord.login {
@@ -34,6 +38,9 @@ class KetchupBot(private val token: KetchupBotToken) {
                 +Intent.GuildMessages
                 +Intent.GuildMessageReactions
                 +Intent.Guilds
+            }
+            presence {
+                listening("\"ketchup help\"")
             }
         }
     }
