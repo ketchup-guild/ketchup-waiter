@@ -5,7 +5,7 @@ A Discord bot for the Ketchup Discord Guild made in [Kotlin](https://kotlinlang.
 Manages events and clubs, allows users to create, manage and join them.
 May over time get some additional features: Games, Integrations, etc.
 
-Made possibly by [kordlid/kord](https://github.com/kordlib/kord) ❤️
+Made possible by [kordlid/kord](https://github.com/kordlib/kord) ❤️
 
 ## Features
 
@@ -13,8 +13,8 @@ In the Discord Guild, use `ketchup help` for available commands.
 
 Here are the main ones:
 
-- Create event channels
-- Create club channels
+- `ketchup event create` Create event channels
+- `ketchup club create` Create club channels
 
 You can also use `ketchup roadmap` for a list of planned features.
 
@@ -75,7 +75,7 @@ docker run --rm -it \
 
 ## Release
 
-This is just for @mtib to remember how to do this:
+This is just for [@mtib](https://github.com/mtib) to remember how to do this:
 
 ```bash
 docker tag ketchup-bot:latest mtibbecker/ketchup-bot:latest
