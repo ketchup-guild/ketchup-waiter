@@ -5,7 +5,7 @@ COPY . .
 
 RUN ./gradlew --no-daemon fatjar
 
-FROM ghcr.io/graalvm/jdk-community:21 AS runtime
+FROM --platform=linux/amd64 ghcr.io/graalvm/jdk-community:21 AS runtime
 
 COPY --from=build /app/build/libs/ /app/
 

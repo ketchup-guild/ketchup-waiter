@@ -4,11 +4,11 @@ import dev.kord.core.Kord
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
-import dev.mtib.ketchup.bot.KetchupBot
+import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.isGod
 import mu.KotlinLogging
 
-class PingCommand : Command(
+class PingCommand(private val magicWord: Storage.MagicWord) : Command(
     "ping",
     "Pings the bot",
     "Pings the bot and returns a pong message"
@@ -20,7 +20,7 @@ class PingCommand : Command(
             if (message.author?.isBot != false) {
                 return@on
             }
-            if (message.content == "${KetchupBot.MAGIC_WORD} $commandName") {
+            if (message.content == "$magicWord $commandName") {
                 message.reply {
                     content = if (message.author.isGod) {
                         ":tada: Pong!"

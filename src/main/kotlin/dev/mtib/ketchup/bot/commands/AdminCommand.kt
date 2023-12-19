@@ -12,12 +12,13 @@ abstract class AdminCommand(
     commandName: String,
     commandShortDescription: String,
     commandHelp: String,
-): Command(
+) : Command(
     commandName,
     commandShortDescription,
     commandHelp,
 ) {
     val adminOnly = true
+    override val category = Category.Admin
 
     private suspend fun MessageCreateEvent.checkAdmin() {
         if (!message.author.isGod) {

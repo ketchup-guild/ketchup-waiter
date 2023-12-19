@@ -22,26 +22,24 @@ import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.getCategoryByNameOrNull
 import mu.KotlinLogging
 
-class CreateEventCommand(private val magicWord: MagicWord) : ChannelCommand(
+class CreateClubCommand(private val magicWord: MagicWord) : ChannelCommand(
     commandName,
-    "Creates an event channel",
+    "Creates a club channel",
     buildString {
-        appendLine("Creates an event channel that people can join.\n")
+        appendLine("Creates a club channel that people can join.\n")
         appendLine("**Usage**:")
-        appendLine("- `$magicWord $commandName <yyyy>-<mm>-<dd> <topic-slug> <description>`")
-        appendLine("- `$magicWord $commandName tbd <topic-slug> <description>`")
+        appendLine("- `$magicWord $commandName <topic-slug> <description>`")
         appendLine("\n**Example**:")
-        appendLine("- `$magicWord $commandName 2025-12-24 xmas-party Let's hang out!`")
-        appendLine("- `$magicWord $commandName tbd cooking-hangout Let's hang out and cook something some time!`")
+        appendLine("- `$magicWord $commandName food Let's talk about food!`")
+        appendLine("- `$magicWord $commandName anime Let's talk about weeb stuff!`")
     },
 ) {
     private val logger = KotlinLogging.logger { }
-    override val category = Category.Event
+    override val category = Category.Club
 
     companion object {
         val CALLS_TO_ARMS_REGEX = Regex("""\*\*Channel:\*\* <#(\d+)>""")
-        val DATE_REGEX = Regex("""(\d{4})-(\d{1,2})-(\d{1,2})|tbd""")
-        const val commandName = "event create"
+        const val commandName = "club create"
     }
 
     private suspend fun Message.callsToArms(): Channel {
@@ -53,73 +51,44 @@ class CreateEventCommand(private val magicWord: MagicWord) : ChannelCommand(
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         if (message.content == "$magicWord $commandName") {
             message.reply {
-                content = this@CreateEventCommand.toLongHelpString()
+                content = this@CreateClubCommand.toLongHelpString()
             }
         }
         try {
             if (message.content.startsWith("$magicWord $commandName ")) {
                 val requestData = message.content.removePrefix("$magicWord $commandName ").trim()
-                val (date, topicSlug, description) = requestData.split(" ", limit = 3)
-
-                val match = DATE_REGEX.find(date)
-                if (match == null) {
-                    message.reply {
-                        content = "Error: date must be in format `yyyy-mm-dd` or `tbd`"
-                    }
-                    return
-                }
-
-                val dateReformat = if (date == "tbd") {
-                    "tbd"
-                } else {
-                    val (_, year, month, day) = match.groupValues
-                    "$year-${month.padStart(2, '0')}-${day.padStart(2, '0')}"
-                }.lowercase()
+                val (topicSlug, description) = requestData.split(" ", limit = 2)
 
                 message.delete("Automation")
 
                 val guild = message.getGuild()
-                val category = guild.getCategoryByNameOrNull("Upcoming Events")
+                val category = guild.getCategoryByNameOrNull("Clubs")
                 if (category == null) {
                     message.reply {
-                        content = "Error: upcoming event category not found"
+                        content = "Error: club category not found"
                     }
                     return
                 }
                 val createdChannel = guild.createPrivateChannelFor(
-                    "${dateReformat}-${topicSlug.lowercase()}",
+                    topicSlug,
                     description,
                     author,
                     category.id,
                 )
 
-                if (date == "tbd") {
-                    createdChannel.createMessage(buildString {
-                        appendLine("This channel was created by ${author.mention} for an event that doesn't have a date yet.")
-                        appendLine()
-                        appendLine("**Description**: $description")
-                        appendLine()
-                        appendLine("I recommend you use https://rallly.co/ to schedule a date for this event.")
-                        append("If you post a rallly link in this channel I'll pin it for you. ")
-                        appendLine("There are even some commands to help you with that, see `$magicWord help` for options (WIP).")
-                        appendLine("Otherwise, ${author.mention} is also a channel admin and can do everything here.")
-                    })
-                } else {
-                    createdChannel.createMessage(buildString {
-                        appendLine("This channel was created by ${author.mention} for an event on $dateReformat.")
-                        appendLine()
-                        appendLine("**Description**: $description")
-                        appendLine()
-                        appendLine("There are even some commands to help you with managing the channel, see `$magicWord help` for options (WIP).")
-                        appendLine("Otherwise, ${author.mention} is also a channel admin and can do everything here.")
-                    })
-                }
+                createdChannel.createMessage(buildString {
+                    appendLine("This channel was created by ${author.mention} for a club.")
+                    appendLine()
+                    appendLine("**Description**: $description")
+                    appendLine()
+                    appendLine("There are even some commands to help you with managing this channel, see `$magicWord help` for options (WIP).")
+                    appendLine("Otherwise, ${author.mention} is also a channel admin and can do everything here.")
+                })
 
                 val joinEmoji = getAnywhere<Emoji>().join
                 val callToArmsMessage = message.channel.createMessage(buildString {
-                    appendLine("Hey, @here! There's a new event!")
+                    appendLine("Hey, @here! There's a new club!")
                     appendLine()
-                    appendLine("**Date:** $dateReformat")
                     appendLine("**Channel:** ${createdChannel.mention}")
                     appendLine("**Admin:** ${author.mention}")
                     appendLine(
