@@ -102,7 +102,6 @@ class CreateEventCommand(private val magicWord: MagicWord) : ChannelCommand(
                         appendLine("I recommend you use https://rallly.co/ to schedule a date for this event.")
                         append("If you post a rallly link in this channel I'll pin it for you. ")
                         appendLine("There are even some commands to help you with that, see `$magicWord help` for options (WIP).")
-                        appendLine("Otherwise, ${author.mention} is also a channel admin and can do everything here.")
                     })
                 } else {
                     createdChannel.createMessage(buildString {
@@ -111,7 +110,6 @@ class CreateEventCommand(private val magicWord: MagicWord) : ChannelCommand(
                         appendLine("**Description**: $description")
                         appendLine()
                         appendLine("There are even some commands to help you with managing the channel, see `$magicWord help` for options (WIP).")
-                        appendLine("Otherwise, ${author.mention} is also a channel admin and can do everything here.")
                     })
                 }
 

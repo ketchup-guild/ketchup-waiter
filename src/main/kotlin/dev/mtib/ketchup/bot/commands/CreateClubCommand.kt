@@ -82,7 +82,6 @@ class CreateClubCommand(private val magicWord: MagicWord) : ChannelCommand(
                     appendLine("**Description**: $description")
                     appendLine()
                     appendLine("There are even some commands to help you with managing this channel, see `$magicWord help` for options (WIP).")
-                    appendLine("Otherwise, ${author.mention} is also a channel admin and can do everything here.")
                 })
 
                 val joinEmoji = getAnywhere<Emoji>().join
@@ -90,7 +89,7 @@ class CreateClubCommand(private val magicWord: MagicWord) : ChannelCommand(
                     appendLine("Hey, @here! There's a new club!")
                     appendLine()
                     appendLine("**Channel:** ${createdChannel.mention}")
-                    appendLine("**Admin:** ${author.mention}")
+                    appendLine("**Creator:** ${author.mention}")
                     appendLine(
                         "**Description:**\n${
                             description.lines().joinToString("\n") { "> $it" }

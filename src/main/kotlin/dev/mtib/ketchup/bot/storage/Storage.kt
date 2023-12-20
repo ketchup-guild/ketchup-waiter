@@ -1,6 +1,7 @@
 package dev.mtib.ketchup.bot.storage
 
 import dev.kord.common.entity.Snowflake
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -44,10 +45,24 @@ class Storage {
 
     }
 
+    data class Flags(private val storage: Storage) {
+        val claimPresence: Boolean
+            get() = storage.getStorageData().claimPresence
+
+        override fun toString(): String {
+            return "Flags(" + listOf(
+                ::claimPresence,
+            ).joinToString(", ") { "${it.name}=${it.get()}" } + ")"
+        }
+    }
+
     companion object {
         const val PATH = "storage.json"
+
+        @OptIn(ExperimentalSerializationApi::class)
         val Format = Json {
             prettyPrint = true
+            prettyPrintIndent = "  "
             encodeDefaults = true
         }
         val module = module {
@@ -55,6 +70,7 @@ class Storage {
             single { MagicWord(get()) }
             single { Gods(get()) }
             single { Emoji(get()) }
+            single { Flags(get()) }
         }
     }
 
@@ -63,6 +79,7 @@ class Storage {
         val gods: List<String> = listOf("168114573826588681"),
         val magicWord: String = "ketchup",
         val joinEmoji: String = "👀",
+        val claimPresence: Boolean = true,
     ) {
         val godSnowflakes: List<Snowflake>
             get() = gods.map { Snowflake(it) }
@@ -71,7 +88,7 @@ class Storage {
     fun getStorageData(): StorageData {
         return try {
             val data = Path(PATH).readText()
-            Format.decodeFromString(data)
+            Format.decodeFromString<StorageData>(data)
         } catch (e: Exception) {
             logger.warn { "Failed to read storage data: $e" }
             val data = StorageData()

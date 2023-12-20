@@ -5,6 +5,7 @@ import dev.kord.gateway.Intent
 import dev.kord.gateway.Intents
 import dev.kord.gateway.PrivilegedIntent
 import dev.mtib.ketchup.bot.commands.Command
+import dev.mtib.ketchup.bot.storage.Storage.Flags
 import dev.mtib.ketchup.bot.storage.Storage.MagicWord
 import dev.mtib.ketchup.bot.utils.getAllAnywhere
 import dev.mtib.ketchup.bot.utils.getAnywhere
@@ -35,8 +36,10 @@ class KetchupBot(private val token: KetchupBotToken) {
                 +Intent.Guilds
                 +Intent.DirectMessages
             }
-            presence {
-                listening("\"$magicWord help\"")
+            if (getAnywhere<Flags>().claimPresence) {
+                presence {
+                    listening("\"$magicWord help\"")
+                }
             }
         }
     }

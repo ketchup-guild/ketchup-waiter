@@ -38,7 +38,8 @@ suspend fun Guild.createPrivateChannelFor(
     name: String,
     description: String,
     adminUser: User,
-    categoryId: Snowflake
+    categoryId: Snowflake,
+    giveChannelAdmin: Boolean = false,
 ): TextChannel {
     return createTextChannel(name) {
         topic = description
@@ -58,10 +59,18 @@ suspend fun Guild.createPrivateChannelFor(
                     id = adminUser.id,
                     type = OverwriteType.Member,
                     allow = Permissions(
-                        Permission.ViewChannel,
-                        Permission.ManageMessages,
-                        Permission.ManageChannels,
-                        Permission.ManageRoles,
+                        buildList {
+                            add(Permission.ViewChannel)
+                            if (giveChannelAdmin) {
+                                addAll(
+                                    listOf(
+                                        Permission.ManageMessages,
+                                        Permission.ManageChannels,
+                                        Permission.ManageRoles,
+                                    )
+                                )
+                            }
+                        } as Iterable<Permission>,
                     ),
                     deny = Permissions(),
                 )

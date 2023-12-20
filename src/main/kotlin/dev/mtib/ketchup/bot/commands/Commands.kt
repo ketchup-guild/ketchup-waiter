@@ -16,6 +16,10 @@ class Commands {
             single { QuittingCommand() } bind Command::class
             single { CreateClubCommand(get()) } bind Command::class
             single { RoadmapCommand() } bind Command::class
+            single { LeaveCommand() } bind Command::class
+            single { InviteCommand() } bind Command::class
+            single { ScheduleCommand() } bind Command::class
+            single { StatsCommand() } bind Command::class
         }
     }
 }
