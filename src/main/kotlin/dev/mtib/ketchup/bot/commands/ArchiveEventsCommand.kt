@@ -12,7 +12,8 @@ class ArchiveEventsCommand : AdminCommand(
     "Archives past channels",
     "Archives channels with dates in the past",
 ) {
-    override val category = Category.Event
+    override val category = Category.Admin
+    override val completeness = Completeness.Stubbed
     override suspend fun MessageCreateEvent.authorized(kord: Kord) {
         message.reply {
             content = "WIP: Archiving events..."

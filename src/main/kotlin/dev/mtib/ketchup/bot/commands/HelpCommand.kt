@@ -14,6 +14,9 @@ class HelpCommand(private val magicWord: MagicWord) : Command(
     "Prints help message",
     "Prints help message, can be used with a command name to get more info about a command",
 ) {
+    override val category = Category.Misc
+    override val completeness = Completeness.Complete
+
     private val logger = KotlinLogging.logger { }
     private val commands by lazy { KoinPlatform.getKoin().getAll<Command>() }
 
@@ -45,6 +48,11 @@ class HelpCommand(private val magicWord: MagicWord) : Command(
                     }
                 }
 
+                if (this@toShortHelpString.completeness != Completeness.Complete) {
+                    append(" ")
+                    append(this@toShortHelpString.completeness.emoji)
+                }
+
                 if (notes.isNotEmpty()) {
                     append(" (")
                     append(notes.joinToString(", "))
@@ -55,7 +63,7 @@ class HelpCommand(private val magicWord: MagicWord) : Command(
 
         fun Command.toLongHelpString(): String {
             val magicWord = getAnywhere<MagicWord>()
-            return "`$magicWord $commandName`: $commandHelp"
+            return "`$magicWord $commandName`: $commandHelp\n\nState: ${completeness.emoji}"
         }
     }
 

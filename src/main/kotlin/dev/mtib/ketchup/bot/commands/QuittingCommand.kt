@@ -9,10 +9,11 @@ import dev.mtib.ketchup.bot.utils.getAnywhere
 
 class QuittingCommand : Command(
     "quit",
-    "Let us know that you quit",
+    "Let us know that you quit Colourbox",
     "Let's us know that you quit and will assign you updated roles",
 ) {
     override val category = Category.Role
+    override val completeness = Completeness.Stubbed
     override suspend fun register(kord: Kord) {
         kord.on<MessageCreateEvent> {
             val author = message.author

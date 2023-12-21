@@ -9,6 +9,9 @@ class RoadmapCommand : ChannelCommand(
     "Roadmap",
     "Roadmap",
 ) {
+    override val completeness: Completeness = Completeness.WIP
+    override val category: Category = Category.Misc
+
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         message.reply {
             content = buildString {

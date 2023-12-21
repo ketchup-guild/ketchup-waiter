@@ -13,8 +13,8 @@ class StatsCommand : ChannelCommand(
     "Show bot stats",
     "Show bot stats",
 ) {
-    override val category: Category
-        get() = Category.Admin
+    override val category: Category = Category.Admin
+    override val completeness: Completeness = Completeness.WIP
 
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         message.reply {

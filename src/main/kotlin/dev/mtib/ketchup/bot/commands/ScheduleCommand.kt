@@ -16,8 +16,8 @@ class ScheduleCommand : ChannelCommand(
     "Update the date of an event",
     "Update the date of an event like `${getAnywhere<MagicWord>()} event schedule 2025-12-31`.",
 ) {
-    override val category: Category
-        get() = Category.Event
+    override val category: Category = Category.Event
+    override val completeness: Completeness = Completeness.WIP
 
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         runCatching {

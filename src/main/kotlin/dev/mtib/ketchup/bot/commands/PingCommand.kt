@@ -14,6 +14,8 @@ class PingCommand(private val magicWord: Storage.MagicWord) : Command(
     "Pings the bot and returns a pong message"
 ) {
     private val logger = KotlinLogging.logger { }
+    override val completeness: Completeness = Completeness.Complete
+    override val category: Category = Category.Admin
 
     override suspend fun register(kord: Kord) {
         kord.on<MessageCreateEvent> {

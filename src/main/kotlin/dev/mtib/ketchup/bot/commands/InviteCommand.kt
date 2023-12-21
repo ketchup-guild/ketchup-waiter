@@ -1,10 +1,19 @@
 package dev.mtib.ketchup.bot.commands
 
+import dev.mtib.ketchup.bot.storage.Storage
+import dev.mtib.ketchup.bot.utils.getAnywhere
+
 class InviteCommand : ChannelCommand(
-    "invite",
-    "Invite a user to the current channel",
-    "Sends an invite to a user on this guild in a DM. They can then join the channel.",
+    COMMAND,
+    "Sends an invite to the current channel to the mentioned channel.",
+    "Sends an invite, similar to the one when initially creating a club or event, to the mentioned channel. Users there can react with an emoji to join.\n" +
+            "Usage: `${getAnywhere<Storage.MagicWord>()} $COMMAND <channel>`\n" +
+            "Example: `${getAnywhere<Storage.MagicWord>()} $COMMAND #general` (make sure to allow Discord to link the channel)",
 ) {
-    override val category: Category
-        get() = Category.Role
+    companion object {
+        const val COMMAND = "invite"
+    }
+
+    override val category: Category = Category.Role
+    override val completeness: Completeness = Completeness.Stubbed
 }

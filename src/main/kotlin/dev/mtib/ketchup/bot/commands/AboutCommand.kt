@@ -15,6 +15,8 @@ class AboutCommand : Command(
     "About the bot",
     "Shows information about the bot"
 ) {
+    override val category = Category.Misc
+    override val completeness = Completeness.Complete
     override suspend fun register(kord: Kord) {
         suspend fun handleMessage(author: User?, message: Message) {
             if (author?.isBot != false) {

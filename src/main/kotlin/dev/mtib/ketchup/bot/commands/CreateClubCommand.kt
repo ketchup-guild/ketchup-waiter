@@ -20,26 +20,28 @@ import dev.mtib.ketchup.bot.storage.Storage.MagicWord
 import dev.mtib.ketchup.bot.utils.createPrivateChannelFor
 import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.getCategoryByNameOrNull
+import dev.mtib.ketchup.bot.utils.getCommandArgs
 import mu.KotlinLogging
 
 class CreateClubCommand(private val magicWord: MagicWord) : ChannelCommand(
-    commandName,
+    COMMAND,
     "Creates a club channel",
     buildString {
         appendLine("Creates a club channel that people can join.\n")
         appendLine("**Usage**:")
-        appendLine("- `$magicWord $commandName <topic-slug> <description>`")
+        appendLine("- `$magicWord $COMMAND <topic-slug> <description>`")
         appendLine("\n**Example**:")
-        appendLine("- `$magicWord $commandName food Let's talk about food!`")
-        appendLine("- `$magicWord $commandName anime Let's talk about weeb stuff!`")
+        appendLine("- `$magicWord $COMMAND food Let's talk about food!`")
+        appendLine("- `$magicWord $COMMAND anime Let's talk about weeb stuff!`")
     },
 ) {
     private val logger = KotlinLogging.logger { }
     override val category = Category.Club
+    override val completeness = Completeness.Complete
 
     companion object {
         val CALLS_TO_ARMS_REGEX = Regex("""\*\*Channel:\*\* <#(\d+)>""")
-        const val commandName = "club create"
+        const val COMMAND = "club create"
     }
 
     private suspend fun Message.callsToArms(): Channel {
@@ -49,55 +51,55 @@ class CreateClubCommand(private val magicWord: MagicWord) : ChannelCommand(
     }
 
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
-        if (message.content == "$magicWord $commandName") {
+        val args = message.getCommandArgs(this@CreateClubCommand)
+        if (args.isEmpty()) {
             message.reply {
                 content = this@CreateClubCommand.toLongHelpString()
             }
+            return
         }
         try {
-            if (message.content.startsWith("$magicWord $commandName ")) {
-                val requestData = message.content.removePrefix("$magicWord $commandName ").trim()
-                val (topicSlug, description) = requestData.split(" ", limit = 2)
+            val topicSlug = args[0]
+            val description = args.drop(1).joinToString(" ")
 
-                message.delete("Automation")
+            message.delete("Automation")
 
-                val guild = message.getGuild()
-                val category = guild.getCategoryByNameOrNull("Clubs")
-                if (category == null) {
-                    message.reply {
-                        content = "Error: club category not found"
-                    }
-                    return
+            val guild = message.getGuild()
+            val category = guild.getCategoryByNameOrNull("Clubs")
+            if (category == null) {
+                message.reply {
+                    content = "Error: club category not found"
                 }
-                val createdChannel = guild.createPrivateChannelFor(
-                    topicSlug,
-                    description,
-                    author,
-                    category.id,
-                )
-
-                createdChannel.createMessage(buildString {
-                    appendLine("This channel was created by ${author.mention} for a club.")
-                    appendLine()
-                    appendLine("**Description**: $description")
-                    appendLine()
-                    appendLine("There are even some commands to help you with managing this channel, see `$magicWord help` for options (WIP).")
-                })
-
-                val joinEmoji = getAnywhere<Emoji>().join
-                val callToArmsMessage = message.channel.createMessage(buildString {
-                    appendLine("Hey, @here! There's a new club!")
-                    appendLine()
-                    appendLine("**Channel:** ${createdChannel.mention}")
-                    appendLine("**Creator:** ${author.mention}")
-                    appendLine(
-                        "**Description:**\n${
-                            description.lines().joinToString("\n") { "> $it" }
-                        }\n\nReact to this message with the $joinEmoji emoji to join the event channel for more information!"
-                    )
-                })
-                callToArmsMessage.addReaction(ReactionEmoji.Unicode(joinEmoji))
+                return
             }
+            val createdChannel = guild.createPrivateChannelFor(
+                topicSlug,
+                description,
+                author,
+                category.id,
+            )
+
+            createdChannel.createMessage(buildString {
+                appendLine("This channel was created by ${author.mention} for a club.")
+                appendLine()
+                appendLine("**Description**: $description")
+                appendLine()
+                appendLine("There are even some commands to help you with managing this channel, see `$magicWord help` for options (WIP).")
+            })
+
+            val joinEmoji = getAnywhere<Emoji>().join
+            val callToArmsMessage = message.channel.createMessage(buildString {
+                appendLine("Hey, @here! There's a new club!")
+                appendLine()
+                appendLine("**Channel:** ${createdChannel.mention}")
+                appendLine("**Creator:** ${author.mention}")
+                appendLine(
+                    "**Description:**\n${
+                        description.lines().joinToString("\n") { "> $it" }
+                    }\n\nReact to this message with the $joinEmoji emoji to join the event channel for more information!"
+                )
+            })
+            callToArmsMessage.addReaction(ReactionEmoji.Unicode(joinEmoji))
         } catch (e: Exception) {
             message.reply {
                 content = "Error: ${e.message}"

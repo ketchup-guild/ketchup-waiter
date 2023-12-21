@@ -11,7 +11,6 @@ import dev.kord.core.entity.channel.Category
 import dev.kord.core.entity.channel.TextChannel
 import dev.mtib.ketchup.bot.commands.Command
 import dev.mtib.ketchup.bot.storage.Storage
-import dev.mtib.ketchup.bot.storage.Storage.MagicWord
 
 val User?.isGod: Boolean
     get() = this?.id in getAnywhere<Storage.Gods>()
@@ -20,7 +19,17 @@ fun Message.matchesSignature(command: Command): Boolean {
     if (author?.isBot != false) {
         return false
     }
-    return content.startsWith("${getAnywhere<MagicWord>()} ${command.commandName}")
+    return content.startsWith(command.prefix)
+}
+
+fun Message.getCommandArgs(command: Command): List<String> {
+    if (!matchesSignature(command)) {
+        return emptyList()
+    }
+    if (content == command.prefix) {
+        return emptyList()
+    }
+    return content.removePrefix(command.prefix).trim().split(Regex("\\s+"))
 }
 
 suspend fun Guild.getCategoryByNameOrNull(name: String): TopGuildChannelBehavior? {

@@ -10,11 +10,11 @@ import dev.kord.core.event.message.MessageCreateEvent
 
 class LeaveCommand : ChannelCommand(
     "leave",
-    "Leaves the channel",
-    "Leaves the channel",
+    "Lets you leave the channel",
+    "Removes yourself from the channel you write this in, if you were individually added (i.e. not through a role).",
 ) {
-    override val category: Category
-        get() = Category.Role
+    override val category: Category = Category.Role
+    override val completeness: Completeness = Completeness.WIP
 
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         runCatching {

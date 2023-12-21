@@ -20,28 +20,30 @@ import dev.mtib.ketchup.bot.storage.Storage.MagicWord
 import dev.mtib.ketchup.bot.utils.createPrivateChannelFor
 import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.getCategoryByNameOrNull
+import dev.mtib.ketchup.bot.utils.getCommandArgs
 import mu.KotlinLogging
 
 class CreateEventCommand(private val magicWord: MagicWord) : ChannelCommand(
-    commandName,
+    COMMAND,
     "Creates an event channel",
     buildString {
         appendLine("Creates an event channel that people can join.\n")
         appendLine("**Usage**:")
-        appendLine("- `$magicWord $commandName <yyyy>-<mm>-<dd> <topic-slug> <description>`")
-        appendLine("- `$magicWord $commandName tbd <topic-slug> <description>`")
+        appendLine("- `$magicWord $COMMAND <yyyy>-<mm>-<dd> <topic-slug> <description>`")
+        appendLine("- `$magicWord $COMMAND tbd <topic-slug> <description>`")
         appendLine("\n**Example**:")
-        appendLine("- `$magicWord $commandName 2025-12-24 xmas-party Let's hang out!`")
-        appendLine("- `$magicWord $commandName tbd cooking-hangout Let's hang out and cook something some time!`")
+        appendLine("- `$magicWord $COMMAND 2025-12-24 xmas-party Let's hang out!`")
+        appendLine("- `$magicWord $COMMAND tbd cooking-hangout Let's hang out and cook something some time!`")
     },
 ) {
     private val logger = KotlinLogging.logger { }
     override val category = Category.Event
+    override val completeness = Completeness.Complete
 
     companion object {
         val CALLS_TO_ARMS_REGEX = Regex("""\*\*Channel:\*\* <#(\d+)>""")
         val DATE_REGEX = Regex("""(\d{4})-(\d{1,2})-(\d{1,2})|tbd""")
-        const val commandName = "event create"
+        const val COMMAND = "event create"
     }
 
     private suspend fun Message.callsToArms(): Channel {
@@ -51,15 +53,19 @@ class CreateEventCommand(private val magicWord: MagicWord) : ChannelCommand(
     }
 
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
-        if (message.content == "$magicWord $commandName") {
+        val args = message.getCommandArgs(this@CreateEventCommand)
+        if (args.size < 3) {
             message.reply {
                 content = this@CreateEventCommand.toLongHelpString()
             }
+            return
         }
         try {
             if (message.content.startsWith("$magicWord $commandName ")) {
                 val requestData = message.content.removePrefix("$magicWord $commandName ").trim()
-                val (date, topicSlug, description) = requestData.split(" ", limit = 3)
+                val date = args[0]
+                val topicSlug = args[1]
+                val description = args.drop(2).joinToString(" ")
 
                 val match = DATE_REGEX.find(date)
                 if (match == null) {
