@@ -1,6 +1,7 @@
 package dev.mtib.ketchup.bot
 
 import dev.mtib.ketchup.bot.commands.Commands
+import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.storage.Storage
 import mu.KotlinLogging
 import org.koin.core.context.startKoin
@@ -36,6 +37,7 @@ suspend fun main() {
                 single { clientId }
                 single { KetchupBot(get()) }
                 single { BotAuthorizationUrl(get()) }
+                single { Database() }
             },
             Commands.module,
             Storage.module,

@@ -19,6 +19,19 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.9")
 
     implementation("dev.kord:kord-core:0.12.0")
+
+    val exposedVersion = "0.47.0"
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-crypt:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+
+    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
+
+    implementation("org.xerial:sqlite-jdbc:3.45.1.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.+")
+
     testImplementation(kotlin("test"))
 }
 

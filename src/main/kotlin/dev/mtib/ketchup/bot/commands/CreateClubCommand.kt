@@ -62,8 +62,6 @@ class CreateClubCommand(private val magicWord: MagicWord) : ChannelCommand(
             val topicSlug = args[0]
             val description = args.drop(1).joinToString(" ")
 
-            message.delete("Automation")
-
             val guild = message.getGuild()
             val category = guild.getCategoryByNameOrNull("Clubs")
             if (category == null) {

@@ -56,6 +56,11 @@ class Storage {
         }
     }
 
+    data class GuildId(private val storage: Storage) {
+        val value: Snowflake
+            get() = Snowflake(storage.getStorageData().guildId)
+    }
+
     companion object {
         const val PATH = "storage.json"
 
@@ -71,6 +76,7 @@ class Storage {
             single { Gods(get()) }
             single { Emoji(get()) }
             single { Flags(get()) }
+            single { GuildId(get()) }
         }
     }
 
@@ -78,6 +84,7 @@ class Storage {
     data class StorageData(
         val gods: List<String> = listOf("168114573826588681"),
         val magicWord: String = "ketchup",
+        val guildId: String = "1118847950743928852",
         val joinEmoji: String = "👀",
         val claimPresence: Boolean = true,
     ) {

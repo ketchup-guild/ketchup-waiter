@@ -82,8 +82,6 @@ class CreateEventCommand(private val magicWord: MagicWord) : ChannelCommand(
                     "$year-${month.padStart(2, '0')}-${day.padStart(2, '0')}"
                 }.lowercase()
 
-                message.delete("Automation")
-
                 val guild = message.getGuild()
                 val category = guild.getCategoryByNameOrNull("Upcoming Events")
                 if (category == null) {

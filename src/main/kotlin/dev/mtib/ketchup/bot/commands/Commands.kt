@@ -23,6 +23,7 @@ class Commands {
             single { RoadmapCommand() } bind Command::class
             single { ScheduleCommand() } bind Command::class
             single { StatsCommand() } bind Command::class
+            single { KetchupRankCommand(get()) } bind Command::class
         }
     }
 }
