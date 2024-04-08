@@ -32,6 +32,13 @@ fun Message.getCommandArgs(command: Command): List<String> {
     return content.removePrefix(command.prefix).trim().split(Regex("\\s+"))
 }
 
+fun Message.getCommandBody(command: Command): String {
+    if (!matchesSignature(command)) {
+        throw IllegalArgumentException("Message does not match command signature")
+    }
+    return content.removePrefix(command.prefix).trim()
+}
+
 suspend fun Guild.getCategoryByNameOrNull(name: String): TopGuildChannelBehavior? {
     return channelBehaviors.find {
         val category = it.asChannelOfOrNull<Category>()

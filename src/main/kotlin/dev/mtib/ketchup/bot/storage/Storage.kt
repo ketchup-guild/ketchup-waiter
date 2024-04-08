@@ -1,5 +1,8 @@
 package dev.mtib.ketchup.bot.storage
 
+import com.aallam.openai.api.logging.LogLevel
+import com.aallam.openai.client.LoggingConfig
+import com.aallam.openai.client.OpenAI
 import dev.kord.common.entity.Snowflake
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -22,6 +25,13 @@ class Storage {
             return value
         }
     }
+
+    @Serializable
+    data class OpenAiData(
+        val apiKey: String,
+        val textModel: String,
+        val imageModel: String,
+    )
 
     data class Gods(private val storage: Storage) {
         private val value: List<Snowflake>
@@ -87,6 +97,11 @@ class Storage {
         val guildId: String = "1118847950743928852",
         val joinEmoji: String = "👀",
         val claimPresence: Boolean = true,
+        val openai: OpenAiData = OpenAiData(
+            apiKey = "",
+            textModel = "",
+            imageModel = "",
+        ),
     ) {
         val godSnowflakes: List<Snowflake>
             get() = gods.map { Snowflake(it) }
@@ -110,6 +125,19 @@ class Storage {
             Path(PATH).writeText(json)
         } catch (e: Exception) {
             logger.warn { "Failed to save storage data: $e" }
+        }
+    }
+
+    @JvmInline
+    value class TextModel(val value: String)
+
+    @JvmInline
+    value class ImageModel(val value: String)
+
+    inline fun <T> withOpenAi(block: (openAi: OpenAI, textModel: TextModel, imageModel: ImageModel) -> T): T {
+        val openAiData = getStorageData().openai
+        return OpenAI(openAiData.apiKey, logging = LoggingConfig(logLevel = LogLevel.None)).use { openAi ->
+            block(openAi, TextModel(openAiData.textModel), ImageModel(openAiData.imageModel))
         }
     }
 }

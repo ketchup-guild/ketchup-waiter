@@ -24,6 +24,8 @@ class Commands {
             single { ScheduleCommand() } bind Command::class
             single { StatsCommand() } bind Command::class
             single { KetchupRankCommand(get()) } bind Command::class
+            single { GptCommand() } bind Command::class
+            single { DalleCommand() } bind Command::class
         }
     }
 }

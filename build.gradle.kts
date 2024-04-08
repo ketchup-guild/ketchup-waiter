@@ -32,6 +32,12 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:3.45.1.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.+")
 
+    implementation(platform("com.aallam.openai:openai-client-bom:3.7.1"))
+
+    implementation("com.aallam.openai:openai-client")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    runtimeOnly("io.ktor:ktor-client-okhttp")
+
     testImplementation(kotlin("test"))
 }
 
