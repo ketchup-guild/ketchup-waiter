@@ -9,6 +9,8 @@ import dev.kord.core.entity.User
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.event.message.ReactionAddEvent
 import dev.kord.core.on
+import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupGivingTable
+import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupRankTable
 import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.getAnywhere

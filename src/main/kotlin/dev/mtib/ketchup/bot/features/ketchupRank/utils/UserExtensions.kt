@@ -1,7 +1,7 @@
 package dev.mtib.ketchup.bot.features.ketchupRank.utils
 
 import dev.kord.core.entity.User
-import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRankTable
+import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupRankTable
 import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.utils.getAnywhere
 import java.math.BigDecimal

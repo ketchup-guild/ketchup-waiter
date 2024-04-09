@@ -1,4 +1,4 @@
-package dev.mtib.ketchup.bot.features.ketchupRank
+package dev.mtib.ketchup.bot.features.ketchupRank.storage
 
 import dev.kord.core.entity.User
 import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRank.Companion.DAILY_KETCHUP_AMOUNT

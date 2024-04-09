@@ -1,7 +1,7 @@
 package dev.mtib.ketchup.bot.storage
 
-import dev.mtib.ketchup.bot.features.ketchupRank.KetchupGivingTable
-import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRankTable
+import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupGivingTable
+import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupRankTable
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger

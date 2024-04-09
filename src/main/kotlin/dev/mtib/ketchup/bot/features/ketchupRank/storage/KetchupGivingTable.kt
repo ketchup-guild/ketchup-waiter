@@ -1,4 +1,4 @@
-package dev.mtib.ketchup.bot.features.ketchupRank
+package dev.mtib.ketchup.bot.features.ketchupRank.storage
 
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.insert
@@ -21,12 +21,12 @@ object KetchupGivingTable : LongIdTable("ketchup_giving") {
         messageId: ULong
     ) {
         insert {
-            it[this.giverId] = giverId
-            it[this.receiverId] = receiverId
-            it[this.givenAt] = givenAt
-            it[this.amount] = amount
-            it[this.reason] = reason
-            it[this.messageId] = messageId
+            it[KetchupGivingTable.giverId] = giverId
+            it[KetchupGivingTable.receiverId] = receiverId
+            it[KetchupGivingTable.givenAt] = givenAt
+            it[KetchupGivingTable.amount] = amount
+            it[KetchupGivingTable.reason] = reason
+            it[KetchupGivingTable.messageId] = messageId
         }
     }
 }
