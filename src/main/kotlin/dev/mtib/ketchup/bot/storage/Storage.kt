@@ -10,6 +10,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import mu.KotlinLogging
 import org.koin.dsl.module
+import java.math.BigDecimal
+import java.math.RoundingMode
 import kotlin.io.path.Path
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
@@ -30,7 +32,9 @@ class Storage {
     data class OpenAiData(
         val apiKey: String,
         val textModel: String,
+        val textPrice: String,
         val imageModel: String,
+        val imagePrice: String,
     )
 
     data class Gods(private val storage: Storage) {
@@ -100,7 +104,9 @@ class Storage {
         val openai: OpenAiData = OpenAiData(
             apiKey = "",
             textModel = "",
+            textPrice = "0.01",
             imageModel = "",
+            imagePrice = "0.5",
         ),
     ) {
         val godSnowflakes: List<Snowflake>
@@ -139,5 +145,18 @@ class Storage {
         return OpenAI(openAiData.apiKey, logging = LoggingConfig(logLevel = LogLevel.None)).use { openAi ->
             block(openAi, TextModel(openAiData.textModel), ImageModel(openAiData.imageModel))
         }
+    }
+
+    data class Pricing(
+        val openAiTextPrice: BigDecimal,
+        val openAiImagePrice: BigDecimal,
+    )
+
+    fun getPricing(): Pricing {
+        val data = getStorageData().openai
+        return Pricing(
+            openAiTextPrice = data.textPrice.toBigDecimal().setScale(4, RoundingMode.CEILING),
+            openAiImagePrice = data.imagePrice.toBigDecimal().setScale(4, RoundingMode.CEILING),
+        )
     }
 }

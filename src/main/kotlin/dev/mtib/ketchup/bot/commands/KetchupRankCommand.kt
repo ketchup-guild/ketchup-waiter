@@ -12,8 +12,10 @@ import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRankTable
 import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.getAnywhere
+import dev.mtib.ketchup.bot.utils.stripTrailingFractionalZeros
 import kotlinx.coroutines.flow.*
 import mu.KotlinLogging
+import java.math.BigDecimal
 
 class KetchupRankCommand(private val magicWord: Storage.MagicWord) : ChannelCommand(
     "rank",
@@ -47,7 +49,7 @@ class KetchupRankCommand(private val magicWord: Storage.MagicWord) : ChannelComm
                 }
                 object {
                     val user: User = user
-                    val score: Int = it.score
+                    val score: BigDecimal = it.score
                 }
             }
             .filterNotNull()
@@ -57,7 +59,7 @@ class KetchupRankCommand(private val magicWord: Storage.MagicWord) : ChannelComm
                             .contains(Permission.ViewChannel)
             }
             .filter { it.user.id.value != 1118847235740946534uL }
-            .filter { it.score > 0 }
+            .filter { it.score.compareTo("0.0".toBigDecimal()) > 0 }
             .toList()
 
         message.reply {
@@ -68,7 +70,7 @@ class KetchupRankCommand(private val magicWord: Storage.MagicWord) : ChannelComm
                     return@buildString
                 }
                 userMentions.forEachIndexed { index, user ->
-                    appendLine("${index + 1}. **${user.user.effectiveName}** - `${user.score}` bottles of ketchup")
+                    appendLine("${index + 1}. **${user.user.effectiveName}** - `${user.score.stripTrailingFractionalZeros()}` bottles of ketchup")
                 }
                 appendLine("_(only shows users with access to ${message.getChannel().mention})_")
             }

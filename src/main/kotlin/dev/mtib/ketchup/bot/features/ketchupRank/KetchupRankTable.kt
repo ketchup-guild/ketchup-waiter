@@ -10,13 +10,14 @@ import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.statements.UpdateStatement
 import org.jetbrains.exposed.sql.update
 import org.jetbrains.exposed.sql.upsert
+import java.math.BigDecimal
 import java.time.Instant
 import java.time.ZoneId
 
 
 object KetchupRankTable : LongIdTable("ketchup_rank") {
     val userId = ulong("user_id").uniqueIndex("user_id_unique_index")
-    val ketchupCount = integer("ketchup_count").default(0)
+    val ketchupCount = decimal("ketchup_count", 12, 4).default("0.0".toBigDecimal())
     val ketchupReset = timestamp("ketchup_reset").nullable()
     val ketchupRemaining = integer("ketchup_remaining").default(DAILY_KETCHUP_AMOUNT)
 
@@ -78,7 +79,7 @@ object KetchupRankTable : LongIdTable("ketchup_rank") {
 
     data class KetchupRankDTO(
         val userId: ULong,
-        val ketchupCount: Int,
+        val ketchupCount: BigDecimal,
         val ketchupReset: Instant?,
         val ketchupRemaining: Int
     )

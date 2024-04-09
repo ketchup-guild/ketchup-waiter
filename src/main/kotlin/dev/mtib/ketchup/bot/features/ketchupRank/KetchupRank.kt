@@ -88,7 +88,7 @@ class KetchupRank {
                 }
                 awardingTargets.map { KetchupRankTable.getOrCreate(it) }.forEach { target ->
                     KetchupRankTable.updateUser(target.userId) {
-                        it[this.ketchupCount] = target.ketchupCount + 1
+                        it[this.ketchupCount] = target.ketchupCount.inc()
                     }
                     KetchupGivingTable.create(
                         amount = 1,
@@ -145,7 +145,7 @@ class KetchupRank {
                         val target = KetchupRankTable.getOrCreate(targetUser)
 
                         KetchupRankTable.updateUser(targetUser) {
-                            it[this.ketchupCount] = target.ketchupCount + amount
+                            it[this.ketchupCount] = target.ketchupCount + amount.toBigDecimal()
                         }
                         KetchupGivingTable.create(
                             amount = amount,

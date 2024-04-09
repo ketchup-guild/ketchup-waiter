@@ -7,19 +7,34 @@ import com.aallam.openai.api.model.ModelId
 import dev.kord.core.behavior.reply
 import dev.kord.core.entity.User
 import dev.kord.core.event.message.MessageCreateEvent
+import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRank
+import dev.mtib.ketchup.bot.features.ketchupRank.utils.KetchupPaymentFailure
+import dev.mtib.ketchup.bot.features.ketchupRank.utils.payKetchup
+import dev.mtib.ketchup.bot.features.ketchupRank.utils.refundKetchup
 import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.getCommandBody
+import dev.mtib.ketchup.bot.utils.stripTrailingFractionalZeros
 
 class GptCommand : ChannelCommand(
     commandName = "gpt",
-    commandShortDescription = "Generate text using ChatGPT",
-    commandHelp = "Generate text using ChatGPT",
+    commandShortDescription = "Generate text using ChatGPT (${getAnywhere<Storage>().getPricing().openAiTextPrice.stripTrailingFractionalZeros()}${KetchupRank.KETCHUP_EMOJI_STRING}/prompt)",
+    commandHelp = "Generate text using ChatGPT using the model \"${getAnywhere<Storage>().getStorageData().openai.textModel}. Usage: `!gpt <prompt>`. Cost: ${getAnywhere<Storage>().getPricing().openAiTextPrice.stripTrailingFractionalZeros()} ${KetchupRank.KETCHUP_EMOJI_STRING}",
 ) {
+    private val price by lazy { getAnywhere<Storage>().getPricing().openAiTextPrice }
+
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         val body = this.message.getCommandBody(this@GptCommand)
         if (body.isBlank()) {
             message.reply { content = "Please provide a prompt" }
+            return
+        }
+        val payment = author.payKetchup(price)
+        if (payment is KetchupPaymentFailure) {
+            message.reply {
+                content =
+                    "You don't have enough ketchup. You need ${payment.requestedKetchup.stripTrailingFractionalZeros()}${KetchupRank.KETCHUP_EMOJI_STRING} but only have ${payment.remainingKetchup.stripTrailingFractionalZeros()}${KetchupRank.KETCHUP_EMOJI_STRING}."
+            }
             return
         }
         val storage = getAnywhere<Storage>()
@@ -35,6 +50,7 @@ class GptCommand : ChannelCommand(
                             You are a chat assistant for a discord server called Ketchup.
                             You aim to be helpful, but use any opportunity to make a joke.
                             You are especially fond of puns and dad jokes.
+                            You are also thoughtful, witty and interested in helping as best you can.
                             Especially if they are about food, condiments or ketchup.
                             Markus is your creator, dad, master and god.
                             The only god larger than Markus is the god of gods, who is Adam Driver, who's secretly a horse.
@@ -50,7 +66,15 @@ class GptCommand : ChannelCommand(
                     ),
                     n = 1,
                 )
-            ).choices.firstOrNull()?.message?.content ?: "Oops. No response."
+            ).choices.firstOrNull()?.message?.content
+        }
+
+        if (chatResponse.isNullOrBlank()) {
+            message.reply {
+                content = "I'm sorry, I couldn't generate a response. Refunding the ketchup."
+            }
+            author.refundKetchup(price)
+            return
         }
 
         message.reply {
