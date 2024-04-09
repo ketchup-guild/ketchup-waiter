@@ -10,6 +10,8 @@ import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRank
 import dev.mtib.ketchup.bot.features.ketchupRank.utils.KetchupPaymentFailure
 import dev.mtib.ketchup.bot.features.ketchupRank.utils.payKetchup
 import dev.mtib.ketchup.bot.features.ketchupRank.utils.refundKetchup
+import dev.mtib.ketchup.bot.features.openai.storage.DalleTrackingTable
+import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.getCommandBody
@@ -27,7 +29,20 @@ class DalleCommand : ChannelCommand(
 
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         val prompt = this.message.getCommandBody(this@DalleCommand)
+        val db = getAnywhere<Database>()
+        fun trackFailure(note: String) {
+            db.transaction {
+                DalleTrackingTable.fail(
+                    userId = author.id.value,
+                    messageId = message.id.value,
+                    prompt = prompt,
+                    cost = price,
+                    note = note
+                )
+            }
+        }
         if (prompt.isBlank()) {
+            trackFailure("No prompt provided")
             message.reply {
                 content = "Please provide a prompt"
             }
@@ -35,6 +50,7 @@ class DalleCommand : ChannelCommand(
         }
         val payment = author.payKetchup(price)
         if (payment is KetchupPaymentFailure) {
+            trackFailure("Not enough ketchup")
             message.reply {
                 content =
                     "You don't have enough ketchup. You need ${payment.requestedKetchup.stripTrailingFractionalZeros()}${KetchupRank.KETCHUP_EMOJI_STRING} but only have ${payment.remainingKetchup.stripTrailingFractionalZeros()}${KetchupRank.KETCHUP_EMOJI_STRING}."
@@ -53,6 +69,7 @@ class DalleCommand : ChannelCommand(
                 ).first()
             }
         } catch (e: Exception) {
+            trackFailure("Error while generating image")
             message.reply {
                 content = "An error occurred while generating the image. Refunding the ketchup."
             }
@@ -78,10 +95,22 @@ class DalleCommand : ChannelCommand(
 
             imagePath.toFile().delete()
         } catch (e: Exception) {
+            trackFailure("Error while sending image")
             message.reply {
                 content = "An error occurred while sending the image. Refunding the ketchup."
             }
             author.refundKetchup(price)
+            return
+        }
+
+        db.transaction {
+            DalleTrackingTable.succeed(
+                userId = author.id.value,
+                messageId = message.id.value,
+                prompt = prompt,
+                responseUrl = image.url,
+                cost = price
+            )
         }
     }
 

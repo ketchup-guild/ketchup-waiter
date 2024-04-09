@@ -2,6 +2,8 @@ package dev.mtib.ketchup.bot.storage
 
 import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupGivingTable
 import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupRankTable
+import dev.mtib.ketchup.bot.features.openai.storage.DalleTrackingTable
+import dev.mtib.ketchup.bot.features.openai.storage.GptTrackingTable
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
@@ -23,6 +25,8 @@ class Database {
                 SchemaUtils.createMissingTablesAndColumns(
                     KetchupRankTable,
                     KetchupGivingTable,
+                    GptTrackingTable,
+                    DalleTrackingTable,
                 )
             }
             logger.info { "Database ready" }

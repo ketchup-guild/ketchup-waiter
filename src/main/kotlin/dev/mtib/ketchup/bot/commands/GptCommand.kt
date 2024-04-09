@@ -11,6 +11,8 @@ import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRank
 import dev.mtib.ketchup.bot.features.ketchupRank.utils.KetchupPaymentFailure
 import dev.mtib.ketchup.bot.features.ketchupRank.utils.payKetchup
 import dev.mtib.ketchup.bot.features.ketchupRank.utils.refundKetchup
+import dev.mtib.ketchup.bot.features.openai.storage.GptTrackingTable
+import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.getCommandBody
@@ -25,12 +27,26 @@ class GptCommand : ChannelCommand(
 
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         val body = this.message.getCommandBody(this@GptCommand)
+        val db = getAnywhere<Database>()
+        fun trackFailure(note: String) {
+            db.transaction {
+                GptTrackingTable.fail(
+                    userId = author.id.value,
+                    messageId = message.id.value,
+                    prompt = body,
+                    cost = price,
+                    note = note
+                )
+            }
+        }
         if (body.isBlank()) {
+            trackFailure("No prompt provided")
             message.reply { content = "Please provide a prompt" }
             return
         }
         val payment = author.payKetchup(price)
         if (payment is KetchupPaymentFailure) {
+            trackFailure("Not enough ketchup")
             message.reply {
                 content =
                     "You don't have enough ketchup. You need ${payment.requestedKetchup.stripTrailingFractionalZeros()}${KetchupRank.KETCHUP_EMOJI_STRING} but only have ${payment.remainingKetchup.stripTrailingFractionalZeros()}${KetchupRank.KETCHUP_EMOJI_STRING}."
@@ -70,6 +86,7 @@ class GptCommand : ChannelCommand(
         }
 
         if (chatResponse.isNullOrBlank()) {
+            trackFailure("No response generated")
             message.reply {
                 content = "I'm sorry, I couldn't generate a response. Refunding the ketchup."
             }
@@ -79,6 +96,15 @@ class GptCommand : ChannelCommand(
 
         message.reply {
             content = chatResponse
+        }
+        db.transaction {
+            GptTrackingTable.succeed(
+                userId = author.id.value,
+                messageId = message.id.value,
+                prompt = body,
+                cost = price,
+                response = chatResponse
+            )
         }
     }
 
