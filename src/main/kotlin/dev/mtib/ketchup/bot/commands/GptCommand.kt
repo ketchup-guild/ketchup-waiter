@@ -21,7 +21,7 @@ import dev.mtib.ketchup.bot.utils.stripTrailingFractionalZeros
 class GptCommand : ChannelCommand(
     commandName = "gpt",
     commandShortDescription = "Generate text using ChatGPT (${getAnywhere<Storage>().getPricing().openAiTextPrice.stripTrailingFractionalZeros()}${KetchupRank.KETCHUP_EMOJI_STRING}/prompt)",
-    commandHelp = "Generate text using ChatGPT using the model \"${getAnywhere<Storage>().getStorageData().openai.textModel}. Usage: `!gpt <prompt>`. Cost: ${getAnywhere<Storage>().getPricing().openAiTextPrice.stripTrailingFractionalZeros()} ${KetchupRank.KETCHUP_EMOJI_STRING}",
+    commandHelp = "Generate text using ChatGPT using the model \"${getAnywhere<Storage>().getStorageData().openai.textModel}\". Cost: ${getAnywhere<Storage>().getPricing().openAiTextPrice.stripTrailingFractionalZeros()}${KetchupRank.KETCHUP_EMOJI_STRING}/prompt",
 ) {
     private val price by lazy { getAnywhere<Storage>().getPricing().openAiTextPrice }
 

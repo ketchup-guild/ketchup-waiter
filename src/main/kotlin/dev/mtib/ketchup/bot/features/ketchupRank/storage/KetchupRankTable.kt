@@ -3,16 +3,14 @@ package dev.mtib.ketchup.bot.features.ketchupRank.storage
 import dev.kord.core.entity.User
 import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRank.Companion.DAILY_KETCHUP_AMOUNT
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.statements.UpdateStatement
-import org.jetbrains.exposed.sql.update
-import org.jetbrains.exposed.sql.upsert
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 
 object KetchupRankTable : LongIdTable("ketchup_rank") {
@@ -43,12 +41,23 @@ object KetchupRankTable : LongIdTable("ketchup_rank") {
     fun getOrCreate(user: User) = getOrCreate(user.id.value)
 
     fun reset(userId: ULong) {
-        KetchupRankTable.upsert(KetchupRankTable.userId, where = { KetchupRankTable.userId eq userId }) {
+        val resetTime = Instant.now().atZone(ZoneId.of("UTC"))
+            .plusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0)
+        val databaseLiteralFormat = "uuuu-MM-dd HH:mm:ss.SSS"
+        KetchupRankTable.upsert(
+            KetchupRankTable.userId,
+            onUpdate = listOf(
+                KetchupRankTable.ketchupReset to stringLiteral(
+                    DateTimeFormatter.ofPattern(databaseLiteralFormat).format(resetTime)
+                ),
+                KetchupRankTable.ketchupRemaining to intLiteral(DAILY_KETCHUP_AMOUNT),
+            ),
+            where = { KetchupRankTable.userId eq userId }
+        ) {
             it[KetchupRankTable.userId] = userId
-            it[ketchupReset] =
-                Instant.now().atZone(ZoneId.of("UTC")).plusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0)
-                    .toInstant()!!
-            it[ketchupRemaining] = DAILY_KETCHUP_AMOUNT
+            it[KetchupRankTable.ketchupReset] = resetTime.toInstant()
+            it[KetchupRankTable.ketchupRemaining] = DAILY_KETCHUP_AMOUNT
+            it[KetchupRankTable.ketchupCount] = BigDecimal.ZERO
         }
     }
 

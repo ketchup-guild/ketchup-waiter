@@ -23,7 +23,7 @@ import kotlin.io.path.writeBytes
 class DalleCommand : ChannelCommand(
     commandName = "dalle",
     commandShortDescription = "Generate an image from a prompt using DALL-E (${getAnywhere<Storage>().getPricing().openAiImagePrice.stripTrailingFractionalZeros()}${KetchupRank.KETCHUP_EMOJI_STRING}/image)",
-    commandHelp = "Generate an image from a prompt using DALL-E model \"${getAnywhere<Storage>().getStorageData().openai.imageModel}\". Usage: `!dalle <prompt>`. Cost ${getAnywhere<Storage>().getPricing().openAiImagePrice.stripTrailingFractionalZeros()}${KetchupRank.KETCHUP_EMOJI_STRING}/image.",
+    commandHelp = "Generate an image from a prompt using DALL-E model \"${getAnywhere<Storage>().getStorageData().openai.imageModel}\". Cost ${getAnywhere<Storage>().getPricing().openAiImagePrice.stripTrailingFractionalZeros()}${KetchupRank.KETCHUP_EMOJI_STRING}/image.",
 ) {
     private val price by lazy { getAnywhere<Storage>().getPricing().openAiImagePrice }
 

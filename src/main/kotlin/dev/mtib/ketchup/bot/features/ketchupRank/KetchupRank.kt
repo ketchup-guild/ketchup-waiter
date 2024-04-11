@@ -46,19 +46,6 @@ class KetchupRank {
         logger.info("Registering KetchupRank")
         registerGivingListener(kord)
         registerReactionListener(kord)
-        registerListListener(kord)
-    }
-
-    private fun registerListListener(kord: Kord) {
-        val magic = getAnywhere<Storage.MagicWord>()
-        kord.on<MessageCreateEvent> {
-            if (message.author?.isBot != false) {
-                return@on
-            }
-            if (message.content != "$magic ranking") {
-                return@on
-            }
-        }
     }
 
     private fun registerReactionListener(kord: Kord) {
@@ -112,7 +99,7 @@ class KetchupRank {
             } else {
                 this.message.reply {
                     content =
-                        "${senderKordUser.mention} gave ${givenKetchup.size} $KETCHUP_EMOJI_STRING to ${givenKetchup.joinToAndString { it.mention }}. (You have $ketchupRemaining $KETCHUP_EMOJI_STRING remaining)"
+                        "${senderKordUser.mention} gave ${givenKetchup.size} $KETCHUP_EMOJI_STRING to ${givenKetchup.joinToAndString { it.mention }}. (You have $ketchupRemaining $KETCHUP_EMOJI_STRING more to give today)"
                 }
             }
         }
@@ -165,7 +152,7 @@ class KetchupRank {
                 if (result.totalAwarding() == 0) {
                     message.reply {
                         content =
-                            "${author.mention} tried to award $KETCHUP_EMOJI_STRING to ${targets.joinToAndString { it.mention }}, but is all out of ketchup. Help them out by reacting with $KETCHUP_EMOJI_STRING."
+                            "${author.mention} tried to award $KETCHUP_EMOJI_STRING to ${targets.joinToAndString { it.mention }}, but is all out of ketchup to give. Help them out by reacting with $KETCHUP_EMOJI_STRING."
                     }
                 } else {
                     message.reply {
