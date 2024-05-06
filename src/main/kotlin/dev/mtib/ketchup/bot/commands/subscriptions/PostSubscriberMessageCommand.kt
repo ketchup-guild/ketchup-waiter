@@ -60,7 +60,7 @@ class PostSubscriberMessageCommand : ChannelCommand(
             appendLine()
             appendLine(messageContent)
             appendLine()
-            appendLine("> Your are getting this message because you are subscribed to the @${role.name} role.")
+            appendLine("> You are getting this message because you are subscribed to the @${role.name} role.")
             appendLine("> You can unsubscribe by saying `${getMagicWord()} unsubscribe @${role.name}` in a channel I can see.")
             appendLine("> Or tell others to subscribe by saying `${getMagicWord()} subscribe @${role.name}` in a channel I can see.")
             appendLine("> This is a **noreply** message. If you have any questions, please ask in the server.")
