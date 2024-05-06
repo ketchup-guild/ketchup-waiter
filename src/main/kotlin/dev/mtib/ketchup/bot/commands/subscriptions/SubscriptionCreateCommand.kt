@@ -15,8 +15,8 @@ class SubscriptionCreateCommand : AdminCommand(
     commandShortDescription = "Create a new subscription",
     commandHelp = "Usage: `create subscription <role>`",
 ) {
-    companion object {
-    }
+    override val category: Category = Category.Role
+    override val completeness: Completeness = Completeness.Complete
 
     override suspend fun MessageCreateEvent.authorized(kord: Kord) {
         val payload = message.getCommandArgs(this@SubscriptionCreateCommand)

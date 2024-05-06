@@ -17,6 +17,9 @@ class ListSubscriptionsCommand : ChannelCommand(
     "Lists all subscriptions",
     "Lists all subscriptions"
 ) {
+    override val category: Category = Category.Role
+    override val completeness: Completeness = Completeness.Complete
+
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         val db = getAnywhere<Database>()
         val subscriptions = db.transaction {

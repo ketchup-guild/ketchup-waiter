@@ -20,6 +20,9 @@ class PostSubscriberMessageCommand : ChannelCommand(
     "Post a message to all subscribers",
     "Usage: `${getMagicWord()} post <role> <message>` to post a message to all subscribers"
 ) {
+    override val category: Category = Category.Role
+    override val completeness: Completeness = Completeness.Complete
+
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         val body = message.getCommandBody(this@PostSubscriberMessageCommand)
         val roleMention = body.substring(0, body.indexOf(" "))

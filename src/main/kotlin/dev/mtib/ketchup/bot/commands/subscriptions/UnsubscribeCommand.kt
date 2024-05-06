@@ -16,6 +16,9 @@ class UnsubscribeCommand : ChannelCommand(
     "Unsubscribe from a role",
     "Usage: `${getMagicWord()} unsubscribe <role>` to unsubscribe from a role"
 ) {
+    override val category: Category = Category.Role
+    override val completeness: Completeness = Completeness.Complete
+
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         val args = message.getCommandArgs(this@UnsubscribeCommand)
 

@@ -16,6 +16,9 @@ class SubscribeCommand : ChannelCommand(
     "Subscribe to a role",
     "Usage: `${getMagicWord()} subscribe <role>` to subscribe to a role"
 ) {
+    override val category: Category = Category.Role
+    override val completeness: Completeness = Completeness.Complete
+
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         val args = message.getCommandArgs(this@SubscribeCommand)
 
