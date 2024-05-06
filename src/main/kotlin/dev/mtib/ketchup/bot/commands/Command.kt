@@ -28,6 +28,7 @@ abstract class Command(
     open val category = Category.Misc
     open val completeness = Completeness.WIP
 
-    open val prefix by lazy { "${getAnywhere<Storage.MagicWord>()} $commandName" }
+    val magicWord by lazy { getAnywhere<Storage.MagicWord>() }
+    open val prefix by lazy { "$magicWord $commandName" }
     abstract suspend fun register(kord: Kord)
 }

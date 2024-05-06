@@ -4,6 +4,7 @@ import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAI
 import dev.kord.common.entity.Snowflake
+import dev.mtib.ketchup.bot.utils.getAnywhere
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -92,6 +93,8 @@ class Storage {
             single { Flags(get()) }
             single { GuildId(get()) }
         }
+
+        fun getMagicWord(): MagicWord = getAnywhere<MagicWord>()
     }
 
     @Serializable

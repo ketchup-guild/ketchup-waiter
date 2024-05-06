@@ -5,6 +5,8 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 storage.json
+.idea/.name
+.idea/codeStyles
 
 ### IntelliJ IDEA ###
 .idea/modules.xml

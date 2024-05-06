@@ -4,6 +4,7 @@ import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupGivingTable
 import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupRankTable
 import dev.mtib.ketchup.bot.features.openai.storage.DalleTrackingTable
 import dev.mtib.ketchup.bot.features.openai.storage.GptTrackingTable
+import dev.mtib.ketchup.bot.features.subscriptions.storage.SubscriptionsTable
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
@@ -27,6 +28,7 @@ class Database {
                     KetchupGivingTable,
                     GptTrackingTable,
                     DalleTrackingTable,
+                    SubscriptionsTable,
                 )
             }
             logger.info { "Database ready" }

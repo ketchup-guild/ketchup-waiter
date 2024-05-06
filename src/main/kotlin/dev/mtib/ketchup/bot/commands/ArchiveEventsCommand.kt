@@ -19,9 +19,4 @@ class ArchiveEventsCommand : AdminCommand(
             content = "WIP: Archiving events..."
         }
     }
-
-    override suspend fun Message.matches(kord: Kord): Boolean {
-        val magicWord = getAnywhere<MagicWord>()
-        return content == "$magicWord $commandName"
-    }
 }

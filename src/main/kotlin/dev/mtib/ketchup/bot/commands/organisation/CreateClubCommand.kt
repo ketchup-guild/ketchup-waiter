@@ -1,4 +1,4 @@
-package dev.mtib.ketchup.bot.commands
+package dev.mtib.ketchup.bot.commands.organisation
 
 import dev.kord.common.entity.Permission
 import dev.kord.common.entity.Permissions
@@ -14,6 +14,7 @@ import dev.kord.core.entity.channel.TextChannel
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.event.message.ReactionAddEvent
 import dev.kord.core.event.message.ReactionRemoveEvent
+import dev.mtib.ketchup.bot.commands.ChannelCommand
 import dev.mtib.ketchup.bot.commands.HelpCommand.Companion.toLongHelpString
 import dev.mtib.ketchup.bot.storage.Storage.Emoji
 import dev.mtib.ketchup.bot.storage.Storage.MagicWord
@@ -23,27 +24,25 @@ import dev.mtib.ketchup.bot.utils.getCategoryByNameOrNull
 import dev.mtib.ketchup.bot.utils.getCommandArgs
 import mu.KotlinLogging
 
-class CreateEventCommand(private val magicWord: MagicWord) : ChannelCommand(
+class CreateClubCommand(private val magicWordBoot: MagicWord) : ChannelCommand(
     COMMAND,
-    "Creates an event channel",
+    "Creates a club channel",
     buildString {
-        appendLine("Creates an event channel that people can join.\n")
+        appendLine("Creates a club channel that people can join.\n")
         appendLine("**Usage**:")
-        appendLine("- `$magicWord $COMMAND <yyyy>-<mm>-<dd> <topic-slug> <description>`")
-        appendLine("- `$magicWord $COMMAND tbd <topic-slug> <description>`")
+        appendLine("- `$magicWordBoot $COMMAND <topic-slug> <description>`")
         appendLine("\n**Example**:")
-        appendLine("- `$magicWord $COMMAND 2025-12-24 xmas-party Let's hang out!`")
-        appendLine("- `$magicWord $COMMAND tbd cooking-hangout Let's hang out and cook something some time!`")
+        appendLine("- `$magicWordBoot $COMMAND food Let's talk about food!`")
+        appendLine("- `$magicWordBoot $COMMAND anime Let's talk about weeb stuff!`")
     },
 ) {
     private val logger = KotlinLogging.logger { }
-    override val category = Category.Event
+    override val category = Category.Club
     override val completeness = Completeness.Complete
 
     companion object {
         val CALLS_TO_ARMS_REGEX = Regex("""\*\*Channel:\*\* <#(\d+)>""")
-        val DATE_REGEX = Regex("""(\d{4})-(\d{1,2})-(\d{1,2})|tbd""")
-        const val COMMAND = "event create"
+        const val COMMAND = "club create"
     }
 
     private suspend fun Message.callsToArms(): Channel {
@@ -53,85 +52,53 @@ class CreateEventCommand(private val magicWord: MagicWord) : ChannelCommand(
     }
 
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
-        val args = message.getCommandArgs(this@CreateEventCommand)
-        if (args.size < 3) {
+        val args = message.getCommandArgs(this@CreateClubCommand)
+        if (args.isEmpty()) {
             message.reply {
-                content = this@CreateEventCommand.toLongHelpString()
+                content = this@CreateClubCommand.toLongHelpString()
             }
             return
         }
         try {
-            if (message.content.startsWith("$magicWord $commandName ")) {
-                val requestData = message.content.removePrefix("$magicWord $commandName ").trim()
-                val date = args[0]
-                val topicSlug = args[1]
-                val description = args.drop(2).joinToString(" ")
+            val topicSlug = args[0]
+            val description = args.drop(1).joinToString(" ")
 
-                val match = DATE_REGEX.find(date)
-                if (match == null) {
-                    message.reply {
-                        content = "Error: date must be in format `yyyy-mm-dd` or `tbd`"
-                    }
-                    return
+            val guild = message.getGuild()
+            val category = guild.getCategoryByNameOrNull("Clubs")
+            if (category == null) {
+                message.reply {
+                    content = "Error: club category not found"
                 }
-
-                val dateReformat = if (date == "tbd") {
-                    "tbd"
-                } else {
-                    val (_, year, month, day) = match.groupValues
-                    "$year-${month.padStart(2, '0')}-${day.padStart(2, '0')}"
-                }.lowercase()
-
-                val guild = message.getGuild()
-                val category = guild.getCategoryByNameOrNull("Upcoming Events")
-                if (category == null) {
-                    message.reply {
-                        content = "Error: upcoming event category not found"
-                    }
-                    return
-                }
-                val createdChannel = guild.createPrivateChannelFor(
-                    "${dateReformat}-${topicSlug.lowercase()}",
-                    description,
-                    author,
-                    category.id,
-                )
-
-                if (date == "tbd") {
-                    createdChannel.createMessage(buildString {
-                        appendLine("This channel was created by ${author.mention} for an event that doesn't have a date yet.")
-                        appendLine()
-                        appendLine("**Description**: $description")
-                        appendLine()
-                        appendLine("I recommend you use https://rallly.co/ to schedule a date for this event.")
-                        append("If you post a rallly link in this channel I'll pin it for you. ")
-                        appendLine("There are even some commands to help you with that, see `$magicWord help` for options (WIP).")
-                    })
-                } else {
-                    createdChannel.createMessage(buildString {
-                        appendLine("This channel was created by ${author.mention} for an event on $dateReformat.")
-                        appendLine()
-                        appendLine("**Description**: $description")
-                        appendLine()
-                        appendLine("There are even some commands to help you with managing the channel, see `$magicWord help` for options (WIP).")
-                    })
-                }
-
-                val joinEmoji = getAnywhere<Emoji>().join
-                val callToArmsMessage = message.channel.createMessage(buildString {
-                    appendLine("Hey, @here! There's a new event!")
-                    appendLine()
-                    appendLine("**Date:** $dateReformat")
-                    appendLine("**Channel:** ${createdChannel.mention}")
-                    appendLine("**Admin:** ${author.mention}")
-                    appendLine(
-                        "**Description:**\n${
-                            description.lines().joinToString("\n") { "> $it" }
-                        }\n\nReact to this message with the $joinEmoji emoji to join the event channel for more information!"
-                    )
-                })
-                callToArmsMessage.addReaction(ReactionEmoji.Unicode(joinEmoji))
+                return
             }
+            val createdChannel = guild.createPrivateChannelFor(
+                topicSlug,
+                description,
+                author,
+                category.id,
+            )
+
+            createdChannel.createMessage(buildString {
+                appendLine("This channel was created by ${author.mention} for a club.")
+                appendLine()
+                appendLine("**Description**: $description")
+                appendLine()
+                appendLine("There are even some commands to help you with managing this channel, see `$magicWord help` for options (WIP).")
+            })
+
+            val joinEmoji = getAnywhere<Emoji>().join
+            val callToArmsMessage = message.channel.createMessage(buildString {
+                appendLine("Hey, @here! There's a new club!")
+                appendLine()
+                appendLine("**Channel:** ${createdChannel.mention}")
+                appendLine("**Creator:** ${author.mention}")
+                appendLine(
+                    "**Description:**\n${
+                        description.lines().joinToString("\n") { "> $it" }
+                    }\n\nReact to this message with the $joinEmoji emoji to join the event channel for more information!"
+                )
+            })
+            callToArmsMessage.addReaction(ReactionEmoji.Unicode(joinEmoji))
         } catch (e: Exception) {
             message.reply {
                 content = "Error: ${e.message}"

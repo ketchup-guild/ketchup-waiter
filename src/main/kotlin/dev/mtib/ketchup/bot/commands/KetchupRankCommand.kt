@@ -6,18 +6,16 @@ import dev.kord.core.behavior.channel.asChannelOf
 import dev.kord.core.behavior.reply
 import dev.kord.core.entity.User
 import dev.kord.core.entity.channel.TextChannel
-import dev.kord.core.entity.effectiveName
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupRankTable
 import dev.mtib.ketchup.bot.storage.Database
-import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.stripTrailingFractionalZeros
 import kotlinx.coroutines.flow.*
 import mu.KotlinLogging
 import java.math.BigDecimal
 
-class KetchupRankCommand(private val magicWord: Storage.MagicWord) : ChannelCommand(
+class KetchupRankCommand() : ChannelCommand(
     "rank",
     "Ketchup Rank",
     "Shows the ketchup bottle ranking of the guild",
@@ -70,7 +68,8 @@ class KetchupRankCommand(private val magicWord: Storage.MagicWord) : ChannelComm
                     return@buildString
                 }
                 userMentions.forEachIndexed { index, user ->
-                    appendLine("${index + 1}. **${user.user.effectiveName}** - `${user.score.stripTrailingFractionalZeros()}` bottles of ketchup")
+                    val userName = message.getGuild().getMember(user.user.id).effectiveName
+                    appendLine("${index + 1}. **${userName}** - `${user.score.stripTrailingFractionalZeros()}` bottles of ketchup")
                 }
                 appendLine("_(only shows users with access to ${message.getChannel().mention})_")
             }

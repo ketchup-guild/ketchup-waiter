@@ -4,11 +4,10 @@ import dev.kord.core.Kord
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
-import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.isGod
 import mu.KotlinLogging
 
-class PingCommand(private val magicWord: Storage.MagicWord) : Command(
+class PingCommand() : Command(
     "ping",
     "Pings the bot",
     "Pings the bot and returns a pong message"

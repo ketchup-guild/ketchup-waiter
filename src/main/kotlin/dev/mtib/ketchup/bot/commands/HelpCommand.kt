@@ -9,7 +9,7 @@ import dev.mtib.ketchup.bot.utils.getAnywhere
 import mu.KotlinLogging
 import org.koin.mp.KoinPlatform
 
-class HelpCommand(private val magicWord: MagicWord) : Command(
+class HelpCommand() : Command(
     "help",
     "Prints help message",
     "Prints help message, can be used with a command name to get more info about a command",
@@ -32,7 +32,7 @@ class HelpCommand(private val magicWord: MagicWord) : Command(
                 }
             }
             appendLine()
-            appendLine("To get more info about a specific command, use `${magicWord} $commandName <command>`")
+            appendLine("To get more info about a specific command, use `$magicWord $commandName <command>`")
         }
     }
 

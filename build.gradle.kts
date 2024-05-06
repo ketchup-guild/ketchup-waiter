@@ -14,7 +14,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     runtimeOnly("io.insert-koin:koin-core:3.5.0")
     implementation("io.insert-koin:koin-core-coroutines:3.5.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0-RC")
+    runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
     implementation("org.slf4j:slf4j-simple:2.0.9")
 
@@ -37,6 +37,9 @@ dependencies {
     implementation("com.aallam.openai:openai-client")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     runtimeOnly("io.ktor:ktor-client-okhttp")
+
+    implementation("io.arrow-kt:arrow-core:1.2.4")
+    implementation("io.arrow-kt:arrow-fx-coroutines:1.2.4")
 
     testImplementation(kotlin("test"))
 }

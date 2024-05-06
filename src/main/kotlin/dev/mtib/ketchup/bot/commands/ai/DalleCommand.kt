@@ -1,4 +1,4 @@
-package dev.mtib.ketchup.bot.commands
+package dev.mtib.ketchup.bot.commands.ai
 
 import com.aallam.openai.api.image.ImageCreation
 import com.aallam.openai.api.model.ModelId
@@ -6,6 +6,7 @@ import dev.kord.core.behavior.reply
 import dev.kord.core.entity.User
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.rest.builder.message.addFile
+import dev.mtib.ketchup.bot.commands.ChannelCommand
 import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRank
 import dev.mtib.ketchup.bot.features.ketchupRank.utils.KetchupPaymentFailure
 import dev.mtib.ketchup.bot.features.ketchupRank.utils.payKetchup
