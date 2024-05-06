@@ -5,15 +5,13 @@ import dev.kord.core.behavior.reply
 import dev.kord.core.entity.User
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.mtib.ketchup.bot.commands.ChannelCommand
+import dev.mtib.ketchup.bot.commands.subscriptions.IterateMembersCommand.Companion.getAllMembers
 import dev.mtib.ketchup.bot.features.subscriptions.Subscriptions
 import dev.mtib.ketchup.bot.features.subscriptions.storage.SubscriptionsTable
 import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.storage.Storage.Companion.getMagicWord
 import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.getCommandBody
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.toList
 
 class PostSubscriberMessageCommand : ChannelCommand(
     "post",
@@ -68,7 +66,7 @@ class PostSubscriberMessageCommand : ChannelCommand(
             appendLine("> This is a **noreply** message. If you have any questions, please ask in the server.")
         }
 
-        val subscribers = message.getGuild().members.filter {
+        val subscribers = message.getGuild().getAllMembers().filter {
             it.roleIds.contains(role.id)
         }.onEach {
             it.getDmChannel().createMessage {

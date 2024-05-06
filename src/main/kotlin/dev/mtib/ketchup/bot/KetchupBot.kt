@@ -38,6 +38,7 @@ class KetchupBot(private val token: KetchupBotToken) {
                 +Intent.GuildMessageReactions
                 +Intent.Guilds
                 +Intent.DirectMessages
+                +Intent.GuildMembers
             }
             if (getAnywhere<Flags>().claimPresence) {
                 presence {

@@ -36,6 +36,7 @@ class Commands {
             single { SubscribeCommand() } bind Command::class
             single { UnsubscribeCommand() } bind Command::class
             single { PostSubscriberMessageCommand() } bind Command::class
+            single { IterateMembersCommand() } bind Command::class
         }
     }
 }
