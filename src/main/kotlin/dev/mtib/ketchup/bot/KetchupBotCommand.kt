@@ -6,6 +6,7 @@ import dev.mtib.ketchup.bot.storage.Storage
 import mu.KotlinLogging
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
+import java.util.*
 
 private val logger = KotlinLogging.logger { }
 
@@ -27,6 +28,7 @@ class BotAuthorizationUrl(id: KetchupBotClientId) {
 }
 
 suspend fun main() {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
     val token = KetchupBotToken(getEnv("KETCHUP_BOT_TOKEN"))
     val clientId = KetchupBotClientId(getEnv("KETCHUP_BOT_CLIENT_ID"))
 

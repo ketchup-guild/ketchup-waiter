@@ -5,7 +5,9 @@ import dev.kord.gateway.Intent
 import dev.kord.gateway.Intents
 import dev.kord.gateway.PrivilegedIntent
 import dev.mtib.ketchup.bot.commands.Command
+import dev.mtib.ketchup.bot.features.Feature
 import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRank
+import dev.mtib.ketchup.bot.features.scheduler.Scheduler
 import dev.mtib.ketchup.bot.storage.Storage.Flags
 import dev.mtib.ketchup.bot.storage.Storage.MagicWord
 import dev.mtib.ketchup.bot.utils.getAllAnywhere
@@ -24,11 +26,14 @@ class KetchupBot(private val token: KetchupBotToken) {
 
         val magicWord = getAnywhere<MagicWord>()
         getAllAnywhere<Command>().forEach {
-            logger.info { "Registering ${it::class.simpleName}" }
+            logger.info { "Registering command ${it::class.simpleName}" }
             it.register(kord)
         }
 
-        KetchupRank().register(kord)
+        val features = listOf<Feature>(KetchupRank(), Scheduler).onEach {
+            logger.info { "Registering feature ${it::class.simpleName}" }
+            it.register(kord)
+        }
 
         @OptIn(PrivilegedIntent::class)
         kord.login {
@@ -45,6 +50,10 @@ class KetchupBot(private val token: KetchupBotToken) {
                     listening("\"$magicWord help\"")
                 }
             }
+        }
+
+        features.forEach {
+            it.cancel()
         }
     }
 

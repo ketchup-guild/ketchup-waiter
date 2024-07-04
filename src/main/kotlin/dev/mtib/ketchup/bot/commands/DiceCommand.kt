@@ -4,14 +4,12 @@ import dev.kord.core.behavior.reply
 import dev.kord.core.entity.User
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.mtib.ketchup.bot.commands.HelpCommand.Companion.toLongHelpString
-import dev.mtib.ketchup.bot.storage.Storage
-import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.getCommandArgs
 
 class DiceCommand : ChannelCommand(
     COMMAND,
     "Roll a dice.",
-    "Roll a dice: `${getAnywhere<Storage.MagicWord>()} $COMMAND <number of sides>`, e.g. `${getAnywhere<Storage.MagicWord>()} $COMMAND 6`.",
+    "Roll a dice: `$magicWord $COMMAND <number of sides>`, e.g. `$magicWord $COMMAND 6`.",
 ) {
     companion object {
         const val COMMAND = "dice"

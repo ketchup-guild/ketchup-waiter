@@ -2,12 +2,9 @@ package dev.mtib.ketchup.bot.commands
 
 import dev.kord.core.Kord
 import dev.kord.core.behavior.reply
-import dev.kord.core.entity.Message
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
 import dev.mtib.ketchup.bot.errors.UnauthorizedException
-import dev.mtib.ketchup.bot.storage.Storage
-import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.isGod
 
 abstract class AdminCommand(
@@ -36,7 +33,7 @@ abstract class AdminCommand(
             if (message.author?.isBot != false) {
                 return@on
             }
-            if (message.matches(kord)) {
+            if (matchesSignature(kord, message)) {
                 try {
                     checkAdmin()
                 } catch (e: UnauthorizedException) {
@@ -48,9 +45,4 @@ abstract class AdminCommand(
     }
 
     abstract suspend fun MessageCreateEvent.authorized(kord: Kord)
-
-    open suspend fun Message.matches(kord: Kord): Boolean {
-        val magicWord = getAnywhere<Storage.MagicWord>()
-        return content.startsWith("$magicWord $commandName")
-    }
 }

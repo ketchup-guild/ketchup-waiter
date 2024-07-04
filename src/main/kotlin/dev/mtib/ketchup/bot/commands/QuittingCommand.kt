@@ -4,8 +4,6 @@ import dev.kord.core.Kord
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
-import dev.mtib.ketchup.bot.storage.Storage.MagicWord
-import dev.mtib.ketchup.bot.utils.getAnywhere
 
 class QuittingCommand : Command(
     "quit",
@@ -20,7 +18,6 @@ class QuittingCommand : Command(
             if (author?.isBot != false) {
                 return@on
             }
-            val magicWord = getAnywhere<MagicWord>()
             if (message.content == "$magicWord $commandName") {
                 message.reply {
                     content = ":tada: We are all so happy for you! (but sadly this command is still WIP)"

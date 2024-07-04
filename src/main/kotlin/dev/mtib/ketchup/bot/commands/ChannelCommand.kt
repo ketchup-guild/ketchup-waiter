@@ -7,7 +7,6 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.event.message.ReactionAddEvent
 import dev.kord.core.event.message.ReactionRemoveEvent
 import dev.kord.core.on
-import dev.mtib.ketchup.bot.utils.matchesSignature
 
 abstract class ChannelCommand(
     commandName: String,
@@ -20,7 +19,7 @@ abstract class ChannelCommand(
 ) {
     final override suspend fun register(kord: Kord) {
         kord.on<MessageCreateEvent> {
-            if (message.matchesSignature(this@ChannelCommand)) {
+            if (matchesSignature(kord, message)) {
                 try {
                     handleMessage(message.author!!)
                 } catch (e: Exception) {

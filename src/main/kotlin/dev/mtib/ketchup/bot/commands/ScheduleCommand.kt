@@ -14,7 +14,7 @@ import dev.mtib.ketchup.bot.utils.getAnywhere
 class ScheduleCommand : ChannelCommand(
     "event schedule",
     "Update the date of an event",
-    "Update the date of an event like `${getAnywhere<MagicWord>()} event schedule 2025-12-31`.",
+    "Update the date of an event like `$magicWord event schedule 2025-12-31`.",
 ) {
     override val category: Category = Category.Event
     override val completeness: Completeness = Completeness.WIP

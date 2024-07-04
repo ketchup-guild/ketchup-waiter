@@ -7,7 +7,6 @@ import dev.kord.core.entity.User
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
 import dev.mtib.ketchup.bot.storage.Storage.Gods
-import dev.mtib.ketchup.bot.storage.Storage.MagicWord
 import dev.mtib.ketchup.bot.utils.getAnywhere
 
 class AboutCommand : Command(
@@ -22,7 +21,6 @@ class AboutCommand : Command(
             if (author?.isBot != false) {
                 return
             }
-            val magicWord = getAnywhere<MagicWord>()
             if (message.content == "$magicWord $commandName") {
                 message.reply {
                     val gods = getAnywhere<Gods>().asList()

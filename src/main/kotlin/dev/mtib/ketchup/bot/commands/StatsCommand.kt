@@ -1,6 +1,8 @@
 package dev.mtib.ketchup.bot.commands
 
+import dev.kord.core.Kord
 import dev.kord.core.behavior.reply
+import dev.kord.core.entity.Message
 import dev.kord.core.entity.User
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.mtib.ketchup.bot.storage.Storage
@@ -38,5 +40,9 @@ class StatsCommand : ChannelCommand(
                 }
             }
         }
+    }
+
+    override suspend fun matchesSignature(kord: Kord, message: Message): Boolean {
+        return message.content == prefix
     }
 }

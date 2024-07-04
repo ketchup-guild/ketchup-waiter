@@ -4,8 +4,6 @@ import dev.kord.core.Kord
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
-import dev.mtib.ketchup.bot.storage.Storage.MagicWord
-import dev.mtib.ketchup.bot.utils.getAnywhere
 import mu.KotlinLogging
 import org.koin.mp.KoinPlatform
 
@@ -38,7 +36,6 @@ class HelpCommand() : Command(
 
     companion object {
         fun Command.toShortHelpString(): String {
-            val magicWord = getAnywhere<MagicWord>()
             return buildString {
                 append("`$magicWord $commandName` - $commandShortDescription")
 
@@ -62,7 +59,6 @@ class HelpCommand() : Command(
         }
 
         fun Command.toLongHelpString(): String {
-            val magicWord = getAnywhere<MagicWord>()
             return "`$magicWord $commandName`: $commandHelp\n\nState: ${completeness.emoji}"
         }
     }

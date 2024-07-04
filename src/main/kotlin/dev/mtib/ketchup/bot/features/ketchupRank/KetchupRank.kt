@@ -9,6 +9,7 @@ import dev.kord.core.entity.User
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.event.message.ReactionAddEvent
 import dev.kord.core.on
+import dev.mtib.ketchup.bot.features.Feature
 import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupGivingTable
 import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupRankTable
 import dev.mtib.ketchup.bot.storage.Database
@@ -22,7 +23,7 @@ import kotlinx.datetime.toJavaInstant
 import mu.KotlinLogging
 import java.time.Instant
 
-class KetchupRank {
+class KetchupRank : Feature {
     val logger = KotlinLogging.logger { }
 
     companion object {
@@ -42,8 +43,7 @@ class KetchupRank {
         }
     }
 
-    fun register(kord: Kord) {
-        logger.info("Registering KetchupRank")
+    override fun register(kord: Kord) {
         registerGivingListener(kord)
         registerReactionListener(kord)
     }

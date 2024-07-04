@@ -4,6 +4,8 @@ import dev.mtib.ketchup.bot.commands.ai.DalleCommand
 import dev.mtib.ketchup.bot.commands.ai.GptCommand
 import dev.mtib.ketchup.bot.commands.organisation.CreateClubCommand
 import dev.mtib.ketchup.bot.commands.organisation.CreateEventCommand
+import dev.mtib.ketchup.bot.commands.schedule.ScheduleMessageCommand
+import dev.mtib.ketchup.bot.commands.schedule.ScheduledMessageStatsCommand
 import dev.mtib.ketchup.bot.commands.subscriptions.*
 import org.koin.dsl.bind
 import org.koin.dsl.binds
@@ -37,6 +39,8 @@ class Commands {
             single { UnsubscribeCommand() } bind Command::class
             single { PostSubscriberMessageCommand() } bind Command::class
             single { IterateMembersCommand() } bind Command::class
+            single { ScheduleMessageCommand } bind Command::class
+            single { ScheduledMessageStatsCommand } binds arrayOf(Command::class, AdminCommand::class)
         }
     }
 }
