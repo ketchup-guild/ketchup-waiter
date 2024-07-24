@@ -4,8 +4,8 @@ import dev.kord.core.behavior.reply
 import dev.kord.core.entity.User
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.mtib.ketchup.bot.commands.ChannelCommand
-import dev.mtib.ketchup.bot.features.subscriptions.Subscriptions
-import dev.mtib.ketchup.bot.features.subscriptions.storage.SubscriptionsTable
+import dev.mtib.ketchup.bot.features.subscriptions.broadcast.Subscriptions
+import dev.mtib.ketchup.bot.features.subscriptions.broadcast.storage.SubscriptionsTable
 import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.storage.Storage.Companion.getMagicWord
 import dev.mtib.ketchup.bot.utils.getAnywhere

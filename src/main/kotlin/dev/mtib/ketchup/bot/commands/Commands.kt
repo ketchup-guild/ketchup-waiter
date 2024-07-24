@@ -41,6 +41,7 @@ class Commands {
             single { IterateMembersCommand() } bind Command::class
             single { ScheduleMessageCommand } bind Command::class
             single { ScheduledMessageStatsCommand } binds arrayOf(Command::class, AdminCommand::class)
+            single { ReactionSubscriptionCommand } bind Command::class
         }
     }
 }

@@ -1,4 +1,4 @@
-package dev.mtib.ketchup.bot.features.subscriptions
+package dev.mtib.ketchup.bot.features.subscriptions.broadcast
 
 import arrow.core.Either
 import dev.kord.common.entity.Snowflake

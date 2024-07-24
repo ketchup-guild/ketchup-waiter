@@ -94,3 +94,19 @@ suspend fun Guild.createPrivateChannelFor(
         }.toMutableSet()
     }
 }
+
+fun messageLink(
+    guildId: Snowflake,
+    channelId: Snowflake,
+    messageId: Snowflake,
+): String {
+    return "https://discord.com/channels/$guildId/$channelId/$messageId"
+}
+
+fun messageLink(
+    guild: Guild,
+    channel: TextChannel,
+    message: Message,
+): String {
+    return messageLink(guild.id, channel.id, message.id)
+}
