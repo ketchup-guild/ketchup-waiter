@@ -19,15 +19,21 @@ class LeaveCommand : ChannelCommand(
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         runCatching {
             val channel = message.channel.asChannelOf<TextChannel>()
+            removeUser(channel, author)
+        }.onFailure {
+            message.reply { content = "You can't leave this channel because something went wrong: ${it.message}" }
+        }
+    }
+
+    companion object {
+        suspend fun removeUser(channel: TextChannel, user: User) {
             val manualPermissions =
-                channel.getPermissionOverwritesForMember(author.id)!!
+                channel.getPermissionOverwritesForMember(user.id)!!
             if (Permission.ViewChannel in manualPermissions.allowed) {
-                channel.editMemberPermission(author.id) {
+                channel.editMemberPermission(user.id) {
                     allowed -= Permission.ViewChannel
                 }
             }
-        }.onFailure {
-            message.reply { content = "You can't leave this channel because something went wrong: ${it.message}" }
         }
     }
 }

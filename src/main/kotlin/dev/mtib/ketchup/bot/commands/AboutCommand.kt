@@ -21,7 +21,7 @@ class AboutCommand : Command(
             if (author?.isBot != false) {
                 return
             }
-            if (message.content == "$magicWord $commandName") {
+            if (message.content == "$magicWord $name") {
                 message.reply {
                     val gods = getAnywhere<Gods>().asList()
                     val user = kord.getUser(gods.first())

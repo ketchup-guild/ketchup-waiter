@@ -7,7 +7,7 @@ import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.matchesSignature
 
 abstract class Command(
-    val commandName: String,
+    val name: String,
     val commandShortDescription: String,
     val commandHelp: String,
 ) {
@@ -34,7 +34,7 @@ abstract class Command(
         val magicWord by lazy { getAnywhere<Storage.MagicWord>() }
     }
 
-    open val prefix by lazy { "$magicWord $commandName" }
+    open val prefix by lazy { "$magicWord $name" }
     abstract suspend fun register(kord: Kord)
 
     open suspend fun matchesSignature(kord: Kord, message: Message): Boolean {

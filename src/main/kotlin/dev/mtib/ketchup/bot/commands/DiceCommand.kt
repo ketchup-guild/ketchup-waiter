@@ -3,7 +3,7 @@ package dev.mtib.ketchup.bot.commands
 import dev.kord.core.behavior.reply
 import dev.kord.core.entity.User
 import dev.kord.core.event.message.MessageCreateEvent
-import dev.mtib.ketchup.bot.commands.HelpCommand.Companion.toLongHelpString
+import dev.mtib.ketchup.bot.commands.HelpCommand.toLongHelpString
 import dev.mtib.ketchup.bot.utils.getCommandArgs
 
 class DiceCommand : ChannelCommand(

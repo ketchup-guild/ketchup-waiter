@@ -15,7 +15,7 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.event.message.ReactionAddEvent
 import dev.kord.core.event.message.ReactionRemoveEvent
 import dev.mtib.ketchup.bot.commands.ChannelCommand
-import dev.mtib.ketchup.bot.commands.HelpCommand.Companion.toLongHelpString
+import dev.mtib.ketchup.bot.commands.HelpCommand.toLongHelpString
 import dev.mtib.ketchup.bot.storage.Storage.Emoji
 import dev.mtib.ketchup.bot.storage.Storage.MagicWord
 import dev.mtib.ketchup.bot.utils.createPrivateChannelFor
@@ -62,8 +62,8 @@ class CreateEventCommand(private val magicWordBoot: MagicWord) : ChannelCommand(
             return
         }
         try {
-            if (message.content.startsWith("$magicWord $commandName ")) {
-                val requestData = message.content.removePrefix("$magicWord $commandName ").trim()
+            if (message.content.startsWith("$magicWord $name ")) {
+                val requestData = message.content.removePrefix("$magicWord $name ").trim()
                 val date = args[0]
                 val topicSlug = args[1]
                 val description = args.drop(2).joinToString(" ")

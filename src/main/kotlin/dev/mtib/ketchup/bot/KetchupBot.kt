@@ -8,6 +8,7 @@ import dev.mtib.ketchup.bot.commands.Command
 import dev.mtib.ketchup.bot.features.Feature
 import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRank
 import dev.mtib.ketchup.bot.features.scheduler.Scheduler
+import dev.mtib.ketchup.bot.interactions.helpers.Interactions
 import dev.mtib.ketchup.bot.storage.Storage.Flags
 import dev.mtib.ketchup.bot.storage.Storage.MagicWord
 import dev.mtib.ketchup.bot.utils.getAllAnywhere
@@ -29,6 +30,8 @@ class KetchupBot(private val token: KetchupBotToken) {
             logger.info { "Registering command ${it::class.simpleName}" }
             it.register(kord)
         }
+
+        Interactions.register(kord)
 
         val features = listOf<Feature>(KetchupRank(), Scheduler).onEach {
             logger.info { "Registering feature ${it::class.simpleName}" }

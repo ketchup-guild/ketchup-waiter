@@ -21,7 +21,7 @@ class Commands {
             single { CreateClubCommand(get()) } bind Command::class
             single { CreateEventCommand(get()) } bind Command::class
             single { DiceCommand() } bind Command::class
-            single { HelpCommand() } bind Command::class
+            single { HelpCommand } bind Command::class
             single { InviteCommand() } bind Command::class
             single { LeaveCommand() } bind Command::class
             single { PingCommand() } bind Command::class

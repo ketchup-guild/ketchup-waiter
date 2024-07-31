@@ -18,7 +18,7 @@ class QuittingCommand : Command(
             if (author?.isBot != false) {
                 return@on
             }
-            if (message.content == "$magicWord $commandName") {
+            if (message.content == "$magicWord $name") {
                 message.reply {
                     content = ":tada: We are all so happy for you! (but sadly this command is still WIP)"
                 }

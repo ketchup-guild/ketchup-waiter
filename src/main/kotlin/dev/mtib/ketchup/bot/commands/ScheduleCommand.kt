@@ -6,7 +6,7 @@ import dev.kord.core.behavior.reply
 import dev.kord.core.entity.User
 import dev.kord.core.entity.channel.TextChannel
 import dev.kord.core.event.message.MessageCreateEvent
-import dev.mtib.ketchup.bot.commands.HelpCommand.Companion.toLongHelpString
+import dev.mtib.ketchup.bot.commands.HelpCommand.toLongHelpString
 import dev.mtib.ketchup.bot.storage.Storage.MagicWord
 import dev.mtib.ketchup.bot.utils.KetchupDate.Companion.toKetchupDate
 import dev.mtib.ketchup.bot.utils.getAnywhere

@@ -15,7 +15,7 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.event.message.ReactionAddEvent
 import dev.kord.core.event.message.ReactionRemoveEvent
 import dev.mtib.ketchup.bot.commands.ChannelCommand
-import dev.mtib.ketchup.bot.commands.HelpCommand.Companion.toLongHelpString
+import dev.mtib.ketchup.bot.commands.HelpCommand.toLongHelpString
 import dev.mtib.ketchup.bot.storage.Storage.Emoji
 import dev.mtib.ketchup.bot.storage.Storage.MagicWord
 import dev.mtib.ketchup.bot.utils.createPrivateChannelFor

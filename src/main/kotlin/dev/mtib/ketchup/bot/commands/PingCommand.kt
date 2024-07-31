@@ -21,7 +21,7 @@ class PingCommand() : Command(
             if (message.author?.isBot != false) {
                 return@on
             }
-            if (message.content == "$magicWord $commandName") {
+            if (message.content == "$magicWord $name") {
                 message.reply {
                     content = if (message.author.isGod) {
                         ":tada: Pong!"
