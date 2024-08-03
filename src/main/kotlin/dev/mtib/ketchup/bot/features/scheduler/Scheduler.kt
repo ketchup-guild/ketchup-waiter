@@ -1,24 +1,19 @@
 package dev.mtib.ketchup.bot.features.scheduler
 
-import dev.kord.common.DiscordTimestampStyle
-import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
-import dev.kord.core.behavior.channel.asChannelOf
-import dev.kord.core.entity.channel.TextChannel
-import dev.mtib.ketchup.bot.commands.schedule.ScheduleMessageCommand
 import dev.mtib.ketchup.bot.features.Feature
-import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduleTable
+import dev.mtib.ketchup.bot.features.scheduler.interfaces.ScheduledAction.ActionNotDueException
+import dev.mtib.ketchup.bot.features.scheduler.interfaces.ScheduledAction.ActionNotDueException.InteractionNotDueException
+import dev.mtib.ketchup.bot.features.scheduler.interfaces.ScheduledAction.ActionNotDueException.MessageNotDueException
+import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduledInteractionsTable
+import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduledMessagesTable
 import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.utils.getAnywhere
-import dev.mtib.ketchup.bot.utils.toMessageFormat
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import mu.KotlinLogging
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.statements.UpdateStatement
-import java.time.Instant
 
 object Scheduler : Feature {
     private val logger = KotlinLogging.logger { }
@@ -44,109 +39,38 @@ object Scheduler : Feature {
     private suspend fun run() {
         logger.debug { "Scheduler running" }
         val db = getAnywhere<Database>()
-        val tasks = db.transaction {
-            ScheduleTable.getUnsentMessages().toList()
+        db.transaction {
+            listOf(
+                // Editable, user may have changed due time
+                ScheduledMessagesTable.getUnsentMessages(),
+                // Not editable, so no need to check for updates
+                ScheduledInteractionsTable.getDueUnsentMessages()
+            ).flatten()
         }
-        tasks.asFlow().onEach {
-            try {
-                val update = handleMessage(it)
-                db.transaction(update)
-            } catch (e: TaskNotDueException) {
-                logger.debug { "Message not due: ${e.scheduledTask.messageIdentification.messageId}" }
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to handle message: ${it.messageIdentification.messageId}" }
-            }
-        }.collect()
-    }
-
-    class TaskNotDueException(
-        val scheduledTask: ScheduleTable.Schedule
-    ) : Exception("Message not due")
-
-    private suspend fun handleMessage(task: ScheduleTable.Schedule): Transaction.() -> Unit {
-        val target = Target.fromULong(kord, task.targetId)
-        val source = task.messageIdentification.getFromSupplier(kord.defaultSupplier)
-
-        val specs = ScheduleMessageCommand.extractMessageSpecs(source)
-
-        val correctionSteps = buildList<ScheduleTable.(UpdateStatement) -> Unit> {
-            if (specs.target.value != task.targetId) {
-                add {
-                    it[targetId] = specs.target.value
-                }
-            }
-            if (specs.time != task.time) {
-                add {
-                    it[time] = specs.time
-                }
-            }
-        }
-
-        if (correctionSteps.isNotEmpty()) {
-            return {
-                ScheduleTable.update2(task.messageIdentification.messageId) {
-                    correctionSteps.forEach { correction ->
-                        this.correction(it)
+            .asFlow()
+            .onEach {
+                try {
+                    it.handleMessage(kord).onSome {
+                        db.transaction(it)
                     }
+                } catch (e: ActionNotDueException) {
+                    when (e) {
+                        is MessageNotDueException -> {
+                            db.transaction {
+                                logger.debug { "Message not due: ${e.scheduledTask.messageIdentification.messageId}" }
+                            }
+                        }
+
+                        is InteractionNotDueException -> {
+                            db.transaction {
+                                logger.debug { "Interaction not due: ${e.scheduledInteraction.id}" }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    logger.error(e) { "Failed to handle message: $it" }
                 }
-            }
-        }
-
-        if (task.time.isAfter(Instant.now())) {
-            throw TaskNotDueException(task)
-        }
-
-        target.send(
-            """
-            ${specs.content}
-            
-            > Scheduled by ${source.author!!.mention} in ${source.channel.mention} ${
-                task.createdAt.toMessageFormat(
-                    DiscordTimestampStyle.RelativeTime
-                )
-            } to be sent ${task.time.toMessageFormat(DiscordTimestampStyle.RelativeTime)}
-        """.trimIndent()
-        )
-
-        return {
-            ScheduleTable.markAsSent(task.messageIdentification.messageId)
-        }
+            }.collect()
     }
 
-    sealed class Target {
-        data class User(val user: dev.kord.core.entity.User) : Target() {
-            override val mention: String
-                get() = user.mention
-
-            override suspend fun send(content: String) {
-                user.getDmChannel().createMessage(content)
-            }
-        }
-
-        data class Channel(val channel: dev.kord.core.entity.channel.Channel) : Target() {
-            override val mention: String
-                get() = channel.mention
-
-            override suspend fun send(content: String) {
-                channel.asChannelOf<TextChannel>().createMessage(content)
-            }
-        }
-
-        companion object {
-            suspend fun fromULong(kord: Kord, id: ULong): Target {
-                val user = kord.getUser(Snowflake(id))
-                if (user != null) {
-                    return User(user)
-                }
-                val channel = kord.getChannel(Snowflake(id))
-                if (channel != null) {
-                    return Channel(channel)
-                }
-                throw IllegalArgumentException("No user or channel found with id $id")
-            }
-        }
-
-        abstract val mention: String
-        abstract suspend fun send(content: String)
-    }
 }

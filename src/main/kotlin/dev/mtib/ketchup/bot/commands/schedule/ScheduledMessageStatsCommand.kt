@@ -6,8 +6,8 @@ import dev.kord.core.Kord
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.mtib.ketchup.bot.commands.AdminCommand
-import dev.mtib.ketchup.bot.features.scheduler.Scheduler
-import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduleTable
+import dev.mtib.ketchup.bot.features.scheduler.entities.Target
+import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduledMessagesTable
 import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.toMessageFormat
@@ -24,10 +24,10 @@ object ScheduledMessageStatsCommand : AdminCommand(
         val db = getAnywhere<Database>()
 
         val scheduledMessages = db.transaction {
-            ScheduleTable.getUnsentMessages().toList()
+            ScheduledMessagesTable.getUnsentMessages().toList()
         }
 
-        suspend fun Snowflake.mention() = Scheduler.Target.fromULong(kord, this.value).mention
+        suspend fun Snowflake.mention() = Target.fromULong(kord, this.value).mention
 
         val summary = scheduledMessages.asFlow().map { task ->
             buildString {

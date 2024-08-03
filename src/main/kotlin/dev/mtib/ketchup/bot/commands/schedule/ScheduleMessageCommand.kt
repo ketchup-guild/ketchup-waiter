@@ -6,7 +6,7 @@ import dev.kord.core.entity.Message
 import dev.kord.core.entity.User
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.mtib.ketchup.bot.commands.ChannelCommand
-import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduleTable
+import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduledMessagesTable
 import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.utils.getAnywhere
 import java.time.Instant
@@ -41,7 +41,7 @@ object ScheduleMessageCommand : ChannelCommand(
 
         try {
             db.transaction {
-                ScheduleTable.create(
+                ScheduledMessagesTable.create(
                     message = specs.messageIdentification,
                     targetId = specs.target.value,
                     time = specs.time
@@ -75,7 +75,7 @@ object ScheduleMessageCommand : ChannelCommand(
             target = stringSpecs.target,
             time = stringSpecs.time,
             content = stringSpecs.content,
-            messageIdentification = ScheduleTable.MessageIdentification(
+            messageIdentification = ScheduledMessagesTable.MessageIdentification(
                 messageId = message.id.value,
                 messageChannelId = message.channelId.value
             )
@@ -92,7 +92,7 @@ object ScheduleMessageCommand : ChannelCommand(
         target: Snowflake,
         time: Instant,
         content: String,
-        val messageIdentification: ScheduleTable.MessageIdentification
+        val messageIdentification: ScheduledMessagesTable.MessageIdentification
     ) : Specs(
         target, time, content
     )

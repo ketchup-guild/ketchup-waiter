@@ -1,14 +1,20 @@
 package dev.mtib.ketchup.bot.interactions.handlers
 
+import dev.kord.common.DiscordTimestampStyle
 import dev.kord.core.Kord
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ActionInteractionCreateEvent
 import dev.kord.rest.builder.interaction.GlobalChatInputCreateBuilder
 import dev.kord.rest.builder.interaction.string
+import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduledInteractionsTable
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getOptionValueByName
+import dev.mtib.ketchup.bot.storage.Database
+import dev.mtib.ketchup.bot.utils.getAnywhere
+import dev.mtib.ketchup.bot.utils.toMessageFormat
 import mu.KotlinLogging
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 object ScheduleMessage : Interaction {
@@ -30,19 +36,29 @@ object ScheduleMessage : Interaction {
     override suspend fun handleInteraction(event: ActionInteractionCreateEvent, kord: Kord) {
         val response = event.defer()
         try {
-            val time = event.interaction.getOptionValueByName("time")
-            val message = event.interaction.getOptionValueByName("message")
-            val timeParsed = formatter.parse(time)
+            val time = event.interaction.getOptionValueByName("time")!!
+            val message = event.interaction.getOptionValueByName("message")!!
+            val timeParsed = ZonedDateTime.parse(time, formatter).toInstant()
 
             val author = event.interaction.user
             val target = event.interaction.channel
+
+            getAnywhere<Database>().transaction {
+                ScheduledInteractionsTable.create(
+                    target.id.value,
+                    author.id.value,
+                    message,
+                    timeParsed
+                )
+            }
+            "Message scheduled to be sent ${timeParsed.toMessageFormat(DiscordTimestampStyle.RelativeTime)}"
         } catch (e: Exception) {
-            logger.warn { e.toString() }
+            e.toString()
+        }.let {
+            response.respond {
+                content = it
+            }
         }
 
-        response.respond {
-            content =
-                "Not yet implemented, because using application commands the body will have to be stored in the db (unlike with the chat command which can just store the id of the message to send later)"
-        }
     }
 }

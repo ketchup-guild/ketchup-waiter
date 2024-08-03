@@ -3,10 +3,7 @@ package dev.mtib.ketchup.bot.interactions.helpers
 import dev.kord.core.Kord
 import dev.kord.core.event.interaction.ActionInteractionCreateEvent
 import dev.kord.core.on
-import dev.mtib.ketchup.bot.interactions.handlers.Help
-import dev.mtib.ketchup.bot.interactions.handlers.Leave
-import dev.mtib.ketchup.bot.interactions.handlers.ReactionSubscribtion
-import dev.mtib.ketchup.bot.interactions.handlers.ScheduleMessage
+import dev.mtib.ketchup.bot.interactions.handlers.*
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
 import mu.KotlinLogging
 
@@ -32,6 +29,7 @@ object Interactions {
         Leave,
         Help,
         ReactionSubscribtion,
-        ScheduleMessage
+        ScheduleMessage,
+        Rank
     )
 }

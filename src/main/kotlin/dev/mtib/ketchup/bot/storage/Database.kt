@@ -4,7 +4,8 @@ import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupGivingTable
 import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupRankTable
 import dev.mtib.ketchup.bot.features.openai.storage.DalleTrackingTable
 import dev.mtib.ketchup.bot.features.openai.storage.GptTrackingTable
-import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduleTable
+import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduledInteractionsTable
+import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduledMessagesTable
 import dev.mtib.ketchup.bot.features.subscriptions.broadcast.storage.SubscriptionsTable
 import dev.mtib.ketchup.bot.features.subscriptions.reactions.storage.ReactionSubscriptionsTable
 import mu.KotlinLogging
@@ -31,8 +32,9 @@ class Database {
                     GptTrackingTable,
                     DalleTrackingTable,
                     SubscriptionsTable,
-                    ScheduleTable,
-                    ReactionSubscriptionsTable
+                    ScheduledMessagesTable,
+                    ReactionSubscriptionsTable,
+                    ScheduledInteractionsTable
                 )
             }
             logger.info { "Database ready" }
