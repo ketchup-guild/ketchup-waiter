@@ -4,6 +4,7 @@ import dev.kord.core.Kord
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
+import dev.mtib.ketchup.bot.interactions.helpers.Interactions
 import mu.KotlinLogging
 import org.koin.mp.KoinPlatform
 
@@ -20,8 +21,7 @@ object HelpCommand : Command(
 
     val globalHelpMessage by lazy {
         buildString {
-            appendLine("Help is on the way!")
-            appendLine("## Available commands")
+            appendLine("## Commands")
             val categoryCommandMap = commands.groupBy { it.category }
             categoryCommandMap.keys.sortedBy { it.name }.forEach { category ->
                 appendLine("\n**${category.name}**")
@@ -30,31 +30,15 @@ object HelpCommand : Command(
                 }
             }
             appendLine()
-            appendLine("To get more info about a specific command, use `$magicWord $name <command>`")
+            appendLine("## Interactions")
+            Interactions.asIterable().forEach {
+                appendLine("- `/${it.name}`: ${it.description}")
+            }
         }
     }
 
     fun Command.toShortHelpString(): String {
-        return buildString {
-            append("`$magicWord $name` - $commandShortDescription")
-
-            val notes = buildList {
-                if (this@toShortHelpString is AdminCommand) {
-                    add("admin only")
-                }
-            }
-
-            if (this@toShortHelpString.completeness != Completeness.Complete) {
-                append(" ")
-                append(this@toShortHelpString.completeness.emoji)
-            }
-
-            if (notes.isNotEmpty()) {
-                append(" (")
-                append(notes.joinToString(", "))
-                append(")")
-            }
-        }
+        return "`$magicWord $name` - $commandShortDescription"
     }
 
     fun Command.toLongHelpString(): String {

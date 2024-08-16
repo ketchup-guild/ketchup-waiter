@@ -36,7 +36,13 @@ object Interactions {
         GamesAll,
         GamesBetween,
         ToggleRespondToGod,
+        Gpt,
+        Dalle,
     )
+
+    fun asIterable(): Iterable<Interaction> {
+        return interactions.asIterable()
+    }
 
     fun ActionInteractionCreateEvent.shouldIgnore(): Boolean {
         return this.interaction.user.isBot || (this.interaction.user.isGod && !ToggleRespondToGod.respondToGod)
