@@ -9,7 +9,7 @@ import dev.mtib.ketchup.bot.commands.Command
 import dev.mtib.ketchup.bot.commands.HelpCommand
 import dev.mtib.ketchup.bot.commands.HelpCommand.toLongHelpString
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
-import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getOptionValueByName
+import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getStringOptionByName
 import mu.KotlinLogging
 import org.koin.mp.KoinPlatform
 
@@ -29,7 +29,7 @@ object Help : Interaction {
     override suspend fun handleInteraction(event: ActionInteractionCreateEvent, kord: Kord) {
         val response = event.defer()
 
-        val specificCommand = event.interaction.getOptionValueByName("command")
+        val specificCommand = event.interaction.getStringOptionByName("command")
         logger.trace { specificCommand }
 
         when (specificCommand) {

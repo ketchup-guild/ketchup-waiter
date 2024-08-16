@@ -30,6 +30,9 @@ object Interactions {
         Help,
         ReactionSubscribtion,
         ScheduleMessage,
-        Rank
+        Rank,
+        GamesFor,
+        GamesAll,
+        GamesBetween,
     )
 }

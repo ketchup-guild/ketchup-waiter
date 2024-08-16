@@ -38,6 +38,12 @@ class Storage {
         val imagePrice: String,
     )
 
+    @Serializable
+    data class NotionData(
+        val integrationToken: String,
+        val gamesDatabaseId: String,
+    )
+
     data class Gods(private val storage: Storage) {
         private val value: List<Snowflake>
             get() = storage.getStorageData().godSnowflakes
@@ -110,6 +116,10 @@ class Storage {
             textPrice = "0.01",
             imageModel = "",
             imagePrice = "0.5",
+        ),
+        val notion: NotionData = NotionData(
+            integrationToken = "",
+            gamesDatabaseId = "",
         ),
     ) {
         val godSnowflakes: List<Snowflake>

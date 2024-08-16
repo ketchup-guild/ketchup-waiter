@@ -21,8 +21,18 @@ interface Interaction {
             PRIVATE
         }
 
-        fun ActionInteraction.getOptionValueByName(name: String): String? {
+        fun ActionInteraction.getStringOptionByName(name: String): String? {
             return this.data.data.options.firstOrNull { it.name == name }?.value?.value?.value?.toString()
+        }
+
+        fun ActionInteraction.getNumberOptionByName(name: String): Double? {
+            val value = this.data.data.options.firstOrNull { it.name == name }?.value?.value?.value
+            return when (value) {
+                is Double -> value
+                is String -> value.toDouble()
+                is Int -> value.toDouble()
+                else -> null
+            }
         }
     }
 

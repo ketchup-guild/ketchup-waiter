@@ -7,7 +7,7 @@ import dev.kord.rest.builder.interaction.GlobalChatInputCreateBuilder
 import dev.kord.rest.builder.interaction.string
 import dev.mtib.ketchup.bot.features.subscriptions.reactions.ReactionSubscriptions
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
-import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getOptionValueByName
+import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getStringOptionByName
 
 object ReactionSubscribtion : Interaction {
     override val visibility: Interaction.Companion.Visibility = Interaction.Companion.Visibility.PRIVATE
@@ -25,7 +25,7 @@ object ReactionSubscribtion : Interaction {
     override suspend fun handleInteraction(event: ActionInteractionCreateEvent, kord: Kord) {
         val response = event.defer()
         val author = event.interaction.user
-        when (event.interaction.getOptionValueByName("action")) {
+        when (event.interaction.getStringOptionByName("action")) {
             "subscribe" -> {
                 ReactionSubscriptions.subscribe(author)
                 response.respond {
