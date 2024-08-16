@@ -5,6 +5,7 @@ import dev.kord.core.event.interaction.ActionInteractionCreateEvent
 import dev.kord.core.on
 import dev.mtib.ketchup.bot.interactions.handlers.*
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
+import dev.mtib.ketchup.bot.utils.isGod
 import mu.KotlinLogging
 
 object Interactions {
@@ -28,11 +29,16 @@ object Interactions {
     private val interactions = arrayOf<Interaction>(
         Leave,
         Help,
-        ReactionSubscribtion,
+        ReactionSubscription,
         ScheduleMessage,
         Rank,
         GamesFor,
         GamesAll,
         GamesBetween,
+        ToggleRespondToGod,
     )
+
+    fun ActionInteractionCreateEvent.shouldIgnore(): Boolean {
+        return this.interaction.user.isBot || (this.interaction.user.isGod && !ToggleRespondToGod.respondToGod)
+    }
 }

@@ -9,6 +9,7 @@ import dev.kord.rest.builder.interaction.string
 import dev.mtib.ketchup.bot.features.notion.NotionClient
 import dev.mtib.ketchup.bot.features.notion.models.NotionGame.Companion.filterByOwnerRegex
 import dev.mtib.ketchup.bot.features.notion.models.NotionGame.Companion.toOwnerMarkdown
+import dev.mtib.ketchup.bot.interactions.helpers.Interactions.shouldIgnore
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getNumberOptionByName
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getStringOptionByName
@@ -28,6 +29,9 @@ object GamesFor : Interaction {
     }
 
     override suspend fun handleInteraction(event: ActionInteractionCreateEvent, kord: Kord) {
+        if (event.shouldIgnore()) {
+            return
+        }
         val response = event.defer()
 
         val numberOfPlayers = event.interaction.getNumberOptionByName("players")?.toInt()

@@ -8,6 +8,7 @@ import dev.kord.rest.builder.interaction.string
 import dev.mtib.ketchup.bot.commands.Command
 import dev.mtib.ketchup.bot.commands.HelpCommand
 import dev.mtib.ketchup.bot.commands.HelpCommand.toLongHelpString
+import dev.mtib.ketchup.bot.interactions.helpers.Interactions.shouldIgnore
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getStringOptionByName
 import mu.KotlinLogging
@@ -27,6 +28,9 @@ object Help : Interaction {
     }
 
     override suspend fun handleInteraction(event: ActionInteractionCreateEvent, kord: Kord) {
+        if (event.shouldIgnore()) {
+            return
+        }
         val response = event.defer()
 
         val specificCommand = event.interaction.getStringOptionByName("command")

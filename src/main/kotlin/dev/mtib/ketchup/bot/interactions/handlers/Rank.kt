@@ -8,6 +8,7 @@ import dev.kord.core.entity.effectiveName
 import dev.kord.core.event.interaction.ActionInteractionCreateEvent
 import dev.kord.rest.builder.interaction.GlobalChatInputCreateBuilder
 import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupRankRepository
+import dev.mtib.ketchup.bot.interactions.helpers.Interactions.shouldIgnore
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
 import dev.mtib.ketchup.bot.utils.stripTrailingFractionalZeros
 
@@ -17,6 +18,9 @@ object Rank : Interaction {
     override val description: String = "Shows the ketchup bottle ranking of the guild"
 
     override suspend fun handleInteraction(event: ActionInteractionCreateEvent, kord: Kord) {
+        if (event.shouldIgnore()) {
+            return
+        }
         val response = event.defer()
         val channel = event.interaction.channel.asChannel()
         val rankings = KetchupRankRepository.getRanking(kord, channel)

@@ -7,6 +7,7 @@ import dev.kord.core.event.interaction.ActionInteractionCreateEvent
 import dev.kord.rest.builder.interaction.GlobalChatInputCreateBuilder
 import dev.kord.rest.builder.interaction.string
 import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduledInteractionsTable
+import dev.mtib.ketchup.bot.interactions.helpers.Interactions.shouldIgnore
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getStringOptionByName
 import dev.mtib.ketchup.bot.storage.Database
@@ -34,6 +35,9 @@ object ScheduleMessage : Interaction {
     }
 
     override suspend fun handleInteraction(event: ActionInteractionCreateEvent, kord: Kord) {
+        if (event.shouldIgnore()) {
+            return
+        }
         val response = event.defer()
         try {
             val time = event.interaction.getStringOptionByName("time")!!
