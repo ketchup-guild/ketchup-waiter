@@ -2,8 +2,11 @@ package dev.mtib.ketchup.bot.commands
 
 import dev.kord.core.Kord
 import dev.kord.core.entity.Message
+import dev.kord.core.entity.User
+import dev.mtib.ketchup.bot.interactions.handlers.ToggleRespondToGod
 import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.getAnywhere
+import dev.mtib.ketchup.bot.utils.isGod
 import dev.mtib.ketchup.bot.utils.matchesSignature
 
 abstract class Command(
@@ -39,5 +42,9 @@ abstract class Command(
 
     open suspend fun matchesSignature(kord: Kord, message: Message): Boolean {
         return message.matchesSignature(this)
+    }
+
+    fun User.isIgnoredGod(): Boolean {
+        return this.isGod && !ToggleRespondToGod.respondToGod
     }
 }

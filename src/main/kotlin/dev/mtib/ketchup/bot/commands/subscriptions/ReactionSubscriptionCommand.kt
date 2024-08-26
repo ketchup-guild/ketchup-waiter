@@ -1,8 +1,6 @@
 package dev.mtib.ketchup.bot.commands.subscriptions
 
-import dev.kord.common.DiscordTimestampStyle
-import dev.kord.common.toMessageFormat
-import dev.kord.core.behavior.channel.createMessage
+import arrow.core.flatMap
 import dev.kord.core.behavior.reply
 import dev.kord.core.entity.User
 import dev.kord.core.event.message.MessageCreateEvent
@@ -10,9 +8,10 @@ import dev.kord.core.event.message.ReactionAddEvent
 import dev.kord.core.event.message.ReactionRemoveEvent
 import dev.mtib.ketchup.bot.commands.ChannelCommand
 import dev.mtib.ketchup.bot.features.subscriptions.reactions.ReactionSubscriptions
+import dev.mtib.ketchup.bot.features.subscriptions.reactions.ReactionSubscriptions.ReactionEvent.Add.Companion.toSubscriptionEvent
+import dev.mtib.ketchup.bot.features.subscriptions.reactions.ReactionSubscriptions.ReactionEvent.Remove.Companion.toSubscriptionEvent
 import dev.mtib.ketchup.bot.utils.getCommandBody
-import dev.mtib.ketchup.bot.utils.messageLink
-import kotlinx.datetime.Clock
+import mu.KotlinLogging
 
 object ReactionSubscriptionCommand : ChannelCommand(
     "reaction",
@@ -30,6 +29,7 @@ object ReactionSubscriptionCommand : ChannelCommand(
 ) {
     override val category: Category = Category.Misc
     override val completeness: Completeness = Completeness.Complete
+    val logger = KotlinLogging.logger { }
 
     override suspend fun MessageCreateEvent.handleMessage(author: User) {
         val body = message.getCommandBody(this@ReactionSubscriptionCommand)
@@ -58,58 +58,14 @@ object ReactionSubscriptionCommand : ChannelCommand(
     }
 
     override suspend fun ReactionAddEvent.handleReaction() {
-        val author = messageAuthor?.asUser() ?: return
-        if (author.isBot) return
-        val reactor = user.asUserOrNull() ?: return
-        if (reactor.isBot) return
-        if (ReactionSubscriptions.isSubscribed(author)) {
-            author.getDmChannel().createMessage {
-                content =
-                    buildString {
-                        append("Your message ")
-                        append(
-                            messageLink(
-                                guildId!!,
-                                channelId,
-                                messageId
-                            )
-                        )
-                        append(" received a reaction ")
-                        append(emoji.mention)
-                        append(" from ")
-                        append(reactor.mention)
-                        append(" ")
-                        append(Clock.System.now().toMessageFormat(DiscordTimestampStyle.RelativeTime))
-                    }
-            }
+        this.toSubscriptionEvent().flatMap { it.handle() }.onLeft {
+            logger.debug { it }
         }
     }
 
     override suspend fun ReactionRemoveEvent.handleReaction() {
-        val author = message.asMessage().author ?: return
-        if (author.isBot) return
-        val user = user.asUserOrNull() ?: return
-        if (user.isBot) return
-        if (ReactionSubscriptions.isSubscribed(author)) {
-            author.getDmChannel().createMessage {
-                content =
-                    buildString {
-                        append("Your message ")
-                        append(
-                            messageLink(
-                                guildId!!,
-                                channelId,
-                                messageId
-                            )
-                        )
-                        append(" lost a reaction ")
-                        append(emoji.mention)
-                        append(" from ")
-                        append(user.mention)
-                        append(" ")
-                        append(Clock.System.now().toMessageFormat(DiscordTimestampStyle.RelativeTime))
-                    }
-            }
+        this.toSubscriptionEvent().flatMap { it.handle() }.onLeft {
+            logger.debug { it }
         }
     }
 }
