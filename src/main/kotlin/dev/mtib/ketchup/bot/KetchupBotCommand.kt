@@ -3,21 +3,13 @@ package dev.mtib.ketchup.bot
 import dev.mtib.ketchup.bot.commands.Commands
 import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.storage.Storage
+import dev.mtib.ketchup.bot.utils.getEnv
 import mu.KotlinLogging
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import java.util.*
 
 private val logger = KotlinLogging.logger { }
-
-private fun getEnv(name: String): String {
-    val value = System.getenv(name)
-    if (value == null || value.isBlank()) {
-        logger.error("$name environment variable not set")
-        System.exit(1)
-    }
-    return value
-}
 
 data class KetchupBotToken(val token: String)
 data class KetchupBotClientId(val clientId: String)
