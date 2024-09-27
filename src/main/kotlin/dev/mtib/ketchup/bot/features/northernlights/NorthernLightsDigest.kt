@@ -48,6 +48,10 @@ object NorthernLightsDigest : Feature {
 
     suspend fun run(kord: Kord) {
         val data = Client.get3DayForecast()
+        val score = ScoreCalculator.score(data)
+
+        if (!score.interesting) return
+
         val channel = kord.getChannelOf<TextChannel>(Snowflake("1285315457032913027"))!!
 
         val message = channel.createMessage(buildString {
