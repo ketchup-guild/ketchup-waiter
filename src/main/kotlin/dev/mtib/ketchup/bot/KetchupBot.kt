@@ -60,6 +60,7 @@ class KetchupBot(private val token: KetchupBotToken) {
         features.forEach {
             it.cancel()
         }
-    }
 
+        Interactions.unregister()
+    }
 }
