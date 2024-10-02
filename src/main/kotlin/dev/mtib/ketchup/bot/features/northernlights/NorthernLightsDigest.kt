@@ -9,6 +9,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.time.delay
 import kotlinx.datetime.Clock
 import kotlinx.datetime.toJavaInstant
+import mu.KotlinLogging
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import kotlin.time.Duration
@@ -17,6 +18,7 @@ import kotlin.time.toJavaDuration
 
 object NorthernLightsDigest : Feature {
     private lateinit var job: Job
+    private val logger = KotlinLogging.logger { }
 
     override fun cancel() {
         job.cancel()
@@ -50,7 +52,16 @@ object NorthernLightsDigest : Feature {
         val data = Client.get3DayForecast()
         val score = ScoreCalculator.score(data)
 
-        if (!score.interesting) return
+        if (!score.interesting) {
+            logger.info {
+                "Not posting Northern Lights forecast because it's not interesting: geomagnetic=${score.geomagnetic}, radiation=${score.radiation}"
+            }
+            return
+        } else {
+            logger.info {
+                "Posting Northern Lights forecast because it's interesting: geomagnetic=${score.geomagnetic}, radiation=${score.radiation}"
+            }
+        }
 
         val channel = kord.getChannelOf<TextChannel>(Snowflake("1285315457032913027"))!!
 
