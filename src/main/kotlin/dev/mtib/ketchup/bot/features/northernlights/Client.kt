@@ -5,7 +5,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 
 object Client {
-    val client = OkHttpClient()
+    private val client = OkHttpClient()
     private fun get3DayForecastTxt(): String? {
         Request.Builder().get().url("https://services.swpc.noaa.gov/text/3-day-forecast.txt").build().let {
             client.newCall(it).execute().use { response ->

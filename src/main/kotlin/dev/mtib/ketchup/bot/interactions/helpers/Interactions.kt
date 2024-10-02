@@ -75,6 +75,7 @@ object Interactions {
         Gpt,
         Dalle,
         NorthernLights,
+        Ghost,
     )
 
     fun asIterable(): Iterable<Interaction> {
