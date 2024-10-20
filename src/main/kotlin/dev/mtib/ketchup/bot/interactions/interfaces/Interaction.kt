@@ -34,6 +34,10 @@ interface Interaction {
                 else -> null
             }
         }
+
+        fun ActionInteraction.getBooleanOptionByName(name: String): Boolean? {
+            return this.data.data.options.firstOrNull { it.name == name }?.value?.value?.value as? Boolean
+        }
     }
 
     suspend fun ActionInteractionCreateEvent.defer(): DeferredMessageInteractionResponseBehavior {

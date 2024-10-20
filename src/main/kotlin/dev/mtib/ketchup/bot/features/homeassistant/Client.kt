@@ -44,11 +44,34 @@ object Client {
         }
     }
 
+    fun setLight(on: Boolean = false, vararg entities: String) {
+        if (baseUrl == null || token == null) {
+            throw IllegalStateException("Home Assistant token or base URL not set")
+        }
+        val url = "$baseUrl/api/services/light/turn_${if (on) "on" else "off"}"
+        val headers = mapOf(
+            "Authorization" to "Bearer $token",
+            "Content-Type" to "application/json"
+        )
+        val body = mapOf(
+            "entity_id" to entities,
+        )
+        val request = okhttp3.Request.Builder()
+            .url(url)
+            .headers(headers.toHeaders())
+            .post(jacksonObjectMapper().writeValueAsBytes(body).toRequestBody("application/json".toMediaType()))
+            .build()
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                throw IllegalStateException("Failed to set light: ${response.code} ${response.body?.string()}")
+            }
+        }
+    }
+
     val keepColors = setOf(
         "aqua",
         "azure",
         "blue",
-        "brown",
         "chocolate",
         "coral",
         "crimson",
@@ -61,15 +84,10 @@ object Client {
         "lavender",
         "lime",
         "magenta",
-        "navy",
         "orange",
         "pink",
         "purple",
         "red",
-        "teal",
-        "violet",
-        "white",
-        "yellow",
     ).also {
         require(it.size <= 25) { "Too many colors: ${it.size} > 25" }
     }
