@@ -18,18 +18,11 @@ class RoadmapCommand : ChannelCommand(
                 appendLine("**Roadmap:** (i.e. features that are planned to be added)")
                 appendLine()
                 listOf(
-                    "Channel: leave a channel you were manually added to",
-                    "Channel: close channel (i.e. archive and remove all members) on inactivity",
-                    "Event channel: archive past events",
-                    "Event channel: notify on upcoming events (e.g. 1 day before)",
-                    "Event channel: list upcoming events and allow to join",
                     "Games: Blackjack",
                     "Games: X of these people are lying",
                     "Rallly integration: notify on completed rallly in event or club channels",
                     "Rallly integration: notify on stale rallly in event or club channels",
                     "Role: change roles (location, employment, etc.)",
-                    "AI: bad text generator based on people's messages",
-                    "AI: DALL·E image generator based on people's messages",
                     "Convenience: improve Direct Message experience"
                 ).map {
                     val (category, description) = it.split(": ")
