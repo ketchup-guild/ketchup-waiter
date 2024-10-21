@@ -80,7 +80,8 @@ object Planner : Feature {
                 Permission.ReadMessageHistory,
                 Permission.SendMessages,
                 Permission.ManageMessages,
-                Permission.ManageThreads
+                Permission.ManageThreads,
+                Permission.ManageChannels,
             )
         }
 
