@@ -5,7 +5,7 @@ import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
 import dev.mtib.ketchup.bot.utils.isGod
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 class PingCommand() : Command(
     "ping",

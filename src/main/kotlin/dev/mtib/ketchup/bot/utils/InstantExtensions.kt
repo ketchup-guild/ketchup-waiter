@@ -6,5 +6,5 @@ import kotlinx.datetime.toKotlinInstant
 import java.time.Instant as JavaInstant
 
 fun JavaInstant.toMessageFormat(
-    style: DiscordTimestampStyle? = null
+    style: DiscordTimestampStyle? = DiscordTimestampStyle.RelativeTime
 ): String = this.toKotlinInstant().toMessageFormat(style)

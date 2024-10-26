@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "1.9.21"
-    kotlin("plugin.serialization") version "1.9.21"
+    kotlin("jvm") version "2.0.20"
+    kotlin("plugin.serialization") version "2.0.20"
 }
 
 group = "dev.mtib"
@@ -17,8 +17,9 @@ dependencies {
     runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
     implementation("org.slf4j:slf4j-simple:2.0.9")
+    implementation("io.github.oshai:kotlin-logging:7.0.0")
 
-    implementation("dev.kord:kord-core:0.12.0")
+    implementation("dev.kord:kord-core:0.14.0")
 
     val exposedVersion = "0.47.0"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
@@ -32,11 +33,11 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:3.45.1.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.+")
 
-    implementation(platform("com.aallam.openai:openai-client-bom:3.7.1"))
-
+    implementation(platform("com.aallam.openai:openai-client-bom:3.8.2"))
     implementation("com.aallam.openai:openai-client")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     runtimeOnly("io.ktor:ktor-client-okhttp")
+
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     implementation("io.arrow-kt:arrow-core:1.2.4")
     implementation("io.arrow-kt:arrow-fx-coroutines:1.2.4")

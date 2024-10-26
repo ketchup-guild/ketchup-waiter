@@ -5,11 +5,11 @@ import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAI
 import dev.kord.common.entity.Snowflake
 import dev.mtib.ketchup.bot.utils.getAnywhere
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import mu.KotlinLogging
 import org.koin.dsl.module
 import java.math.BigDecimal
 import java.math.RoundingMode

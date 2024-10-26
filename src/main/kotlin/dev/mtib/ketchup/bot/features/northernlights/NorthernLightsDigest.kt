@@ -6,11 +6,11 @@ import dev.kord.core.entity.channel.TextChannel
 import dev.mtib.ketchup.bot.features.Feature
 import dev.mtib.ketchup.bot.features.northernlights.models.Forecast
 import dev.mtib.ketchup.bot.utils.getEnv
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import kotlinx.coroutines.time.delay
 import kotlinx.datetime.Clock
 import kotlinx.datetime.toJavaInstant
-import mu.KotlinLogging
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import kotlin.time.Duration

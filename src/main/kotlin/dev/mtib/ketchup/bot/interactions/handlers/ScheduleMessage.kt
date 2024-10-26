@@ -13,7 +13,7 @@ import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getStr
 import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.toMessageFormat
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter

@@ -8,7 +8,7 @@ import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduledInteractionsTabl
 import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduledMessagesTable
 import dev.mtib.ketchup.bot.features.subscriptions.broadcast.storage.SubscriptionsTable
 import dev.mtib.ketchup.bot.features.subscriptions.reactions.storage.ReactionSubscriptionsTable
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.Transaction

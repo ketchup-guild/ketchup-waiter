@@ -8,13 +8,14 @@ import dev.mtib.ketchup.bot.commands.Command
 import dev.mtib.ketchup.bot.features.Feature
 import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRank
 import dev.mtib.ketchup.bot.features.northernlights.NorthernLightsDigest
+import dev.mtib.ketchup.bot.features.planner.Planner
 import dev.mtib.ketchup.bot.features.scheduler.Scheduler
 import dev.mtib.ketchup.bot.interactions.helpers.Interactions
 import dev.mtib.ketchup.bot.storage.Storage.Flags
 import dev.mtib.ketchup.bot.storage.Storage.MagicWord
 import dev.mtib.ketchup.bot.utils.getAllAnywhere
 import dev.mtib.ketchup.bot.utils.getAnywhere
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 class KetchupBot(private val token: KetchupBotToken) {
     private val logger = KotlinLogging.logger { }
@@ -34,7 +35,7 @@ class KetchupBot(private val token: KetchupBotToken) {
 
         Interactions.register(kord)
 
-        val features = listOf<Feature>(KetchupRank(), Scheduler, NorthernLightsDigest).onEach {
+        val features = listOf<Feature>(KetchupRank(), Scheduler, NorthernLightsDigest, Planner).onEach {
             logger.info { "Registering feature ${it::class.simpleName}" }
             it.register(kord)
         }

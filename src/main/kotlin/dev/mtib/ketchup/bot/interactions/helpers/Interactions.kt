@@ -8,7 +8,7 @@ import dev.kord.core.on
 import dev.mtib.ketchup.bot.interactions.handlers.*
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
 import dev.mtib.ketchup.bot.utils.isGod
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 object Interactions {
     private val logger = KotlinLogging.logger { }

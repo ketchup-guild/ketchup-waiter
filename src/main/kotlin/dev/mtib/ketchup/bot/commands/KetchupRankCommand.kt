@@ -7,7 +7,7 @@ import dev.kord.core.entity.channel.TextChannel
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupRankRepository
 import dev.mtib.ketchup.bot.utils.stripTrailingFractionalZeros
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 class KetchupRankCommand() : ChannelCommand(
     "rank",

@@ -17,10 +17,10 @@ import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.getAnywhere
 import dev.mtib.ketchup.bot.utils.joinToAndString
 import dev.mtib.ketchup.bot.utils.rememberOnce
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.toJavaInstant
-import mu.KotlinLogging
 import java.time.Instant
 
 class KetchupRank : Feature {

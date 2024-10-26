@@ -9,11 +9,11 @@ import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduledInteractionsTabl
 import dev.mtib.ketchup.bot.features.scheduler.storage.ScheduledMessagesTable
 import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.utils.getAnywhere
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
-import mu.KotlinLogging
 
 object Scheduler : Feature {
     private val logger = KotlinLogging.logger { }

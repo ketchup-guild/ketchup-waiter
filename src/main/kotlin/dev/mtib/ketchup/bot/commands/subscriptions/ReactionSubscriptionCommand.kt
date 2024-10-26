@@ -11,7 +11,7 @@ import dev.mtib.ketchup.bot.features.subscriptions.reactions.ReactionSubscriptio
 import dev.mtib.ketchup.bot.features.subscriptions.reactions.ReactionSubscriptions.ReactionEvent.Add.Companion.toSubscriptionEvent
 import dev.mtib.ketchup.bot.features.subscriptions.reactions.ReactionSubscriptions.ReactionEvent.Remove.Companion.toSubscriptionEvent
 import dev.mtib.ketchup.bot.utils.getCommandBody
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 object ReactionSubscriptionCommand : ChannelCommand(
     "reaction",

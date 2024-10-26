@@ -7,9 +7,9 @@ import dev.kord.gateway.Intent
 import dev.kord.gateway.Intents
 import dev.kord.gateway.PrivilegedIntent
 import dev.mtib.ketchup.bot.utils.getEnv
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
-import mu.KotlinLogging
 
 val logger = KotlinLogging.logger {}
 

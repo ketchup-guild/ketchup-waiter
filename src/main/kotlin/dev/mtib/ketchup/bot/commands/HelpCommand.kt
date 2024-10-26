@@ -5,7 +5,7 @@ import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
 import dev.mtib.ketchup.bot.interactions.helpers.Interactions
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.mp.KoinPlatform
 
 object HelpCommand : Command(

@@ -8,6 +8,7 @@ data class IdeaDto(
     val minPersons: Int,
     val maxPersons: Int,
     val scheduled: Boolean,
+    val confidence: Double,
 ) {
     fun toDiscordMarkdownString(): String {
         return """
@@ -18,6 +19,7 @@ data class IdeaDto(
             |**Min persons:** $minPersons
             |**Max persons:** $maxPersons
             |**Scheduled:** $scheduled
+            |**Confidence:** $confidence
         """.trimMargin()
     }
 }
