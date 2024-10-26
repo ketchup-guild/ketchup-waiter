@@ -37,6 +37,7 @@ object Planner : Feature {
     private val locations by lazy { Locations.fromEnvironment() }
     private val jobs = mutableListOf<Job>()
     private const val PLANNER_IDEA_JOIN_PREFIX = "planner_join_idea_"
+    private val validEventChannelName = Regex("(idea|[0-9]{4}-[0-9]{2}-[0-9]{2})-.+")
 
     override fun register(kord: Kord) {
         kord.on<MessageCreateEvent> {
@@ -55,7 +56,6 @@ object Planner : Feature {
             }
         }.also { jobs.add(it) }
 
-        val validChannelNameRegex = Regex("(idea|[0-9]{4}-[0-9]{2}-[0-9]{2})-.+")
         kord.on<ChannelUpdateEvent> {
             val categoryChannel = this.channel.asChannelOfOrNull<CategorizableChannel>()
             val categoryId = categoryChannel?.category?.id
@@ -70,64 +70,12 @@ object Planner : Feature {
                 return@on
             }
 
-            val earlierName = this.old?.data?.name?.value
-
-            if (earlierName == categoryChannel.name) {
+            if (this.old?.data?.name?.value == categoryChannel.name) {
                 // No change in name
                 return@on
             }
 
-            logger.info { "Channel renamed $earlierName -> ${categoryChannel.name}" }
-
-            if (!validChannelNameRegex.matches(categoryChannel.name)) {
-                logger.info { "Channel rename $earlierName -> ${categoryChannel.name} not valid, annoying users in the channel" }
-                categoryChannel.asChannelOf<TextChannel>().createMessage() {
-                    content =
-                        "Channel names must follow the format `idea-<word1>-<word2>-...-<wordN>` or `<year>-<month>-<day>-<word1>-<word2>-...-<wordN>`. Please fix this issue so that the bot automations can work as expected."
-                }
-                return@on
-            } else {
-                categoryChannel.asChannelOf<TextChannel>()
-                    .createMessage("Channel name updated to \"${categoryChannel.name}\" (earlier \"$earlierName\")")
-                if (!categoryChannel.name.startsWith("idea")) {
-                    // Calendared event, new date? Announce
-                    val announcementChannel = kord.getChannelOf<TextChannel>(locations.announcementChannelSnowflake)!!
-                    val dateComponents = categoryChannel.name.split("-").take(3)
-                    val date = Instant.now().atZone(ZoneId.of("Europe/Copenhagen")).let {
-                        it.withYear(dateComponents[0].toInt())
-                            .withMonth(dateComponents[1].toInt())
-                            .withDayOfMonth(dateComponents[2].toInt())
-                            .withHour(14)
-                            .withMinute(0)
-                            .withSecond(0)
-                            .withNano(0)
-                    }
-                    if (date.toInstant().isAfter(Instant.now())) {
-                        announcementChannel.createMessage {
-                            content = """
-                            Event `${categoryChannel.name}` scheduled ~${
-                                date.toInstant().toMessageFormat()
-                            } has been updated:
-                            
-                            > ${categoryChannel.asChannelOf<TextChannel>().topic}
-                            
-                        """.trimIndent()
-
-                            actionRow {
-                                interactionButton(
-                                    style = ButtonStyle.Primary,
-                                    customId = "${PLANNER_IDEA_JOIN_PREFIX}${categoryChannel.id.value}",
-                                    builder = {
-                                        this.label = "I'm interested!"
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            organiseCategoryChannels(categoryChannel.category!!)
+            handleRename()
         }.also { jobs.add(it) }
 
         kord.on<ActionInteractionCreateEvent> {
@@ -221,6 +169,63 @@ object Planner : Feature {
                 }
             }
         }
+    }
+
+    private suspend fun ChannelUpdateEvent.handleRename() {
+        val categoryChannel = this.channel.asChannelOf<CategorizableChannel>()
+        val earlierName = this.old?.data?.name?.value
+
+        logger.info { "Channel renamed $earlierName -> ${categoryChannel.name}" }
+
+        if (!validEventChannelName.matches(categoryChannel.name)) {
+            logger.info { "Channel rename $earlierName -> ${categoryChannel.name} not valid, annoying users in the channel" }
+            categoryChannel.asChannelOf<TextChannel>().createMessage() {
+                content =
+                    "Channel names must follow the format `idea-<word1>-<word2>-...-<wordN>` or `<year>-<month>-<day>-<word1>-<word2>-...-<wordN>`. Please fix this issue so that the bot automations can work as expected."
+            }
+            return
+        } else {
+            categoryChannel.asChannelOf<TextChannel>()
+                .createMessage("Channel name updated to \"${categoryChannel.name}\" (earlier \"$earlierName\")")
+            if (!Regex("(^idea|🔕|private)").containsMatchIn(categoryChannel.name)) {
+                // Calendared event, not private, new date? Announce
+                val announcementChannel = kord.getChannelOf<TextChannel>(locations.announcementChannelSnowflake)!!
+                val dateComponents = categoryChannel.name.split("-").take(3)
+                val date = Instant.now().atZone(ZoneId.of("Europe/Copenhagen")).let {
+                    it.withYear(dateComponents[0].toInt())
+                        .withMonth(dateComponents[1].toInt())
+                        .withDayOfMonth(dateComponents[2].toInt())
+                        .withHour(14)
+                        .withMinute(0)
+                        .withSecond(0)
+                        .withNano(0)
+                }
+                if (date.toInstant().isAfter(Instant.now())) {
+                    announcementChannel.createMessage {
+                        content = """
+                            Event `${categoryChannel.name}` scheduled ~${
+                            date.toInstant().toMessageFormat()
+                        } has been updated:
+                            
+                            > ${categoryChannel.asChannelOf<TextChannel>().topic}
+                            
+                        """.trimIndent()
+
+                        actionRow {
+                            interactionButton(
+                                style = ButtonStyle.Primary,
+                                customId = "${PLANNER_IDEA_JOIN_PREFIX}${categoryChannel.id.value}",
+                                builder = {
+                                    this.label = "I'm interested!"
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        organiseCategoryChannels(categoryChannel.category!!)
     }
 
     private suspend fun MessageCreateEvent.handleIdea(kord: Kord) {
