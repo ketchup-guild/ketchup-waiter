@@ -27,9 +27,9 @@ object NorthernLightsDigest : Feature {
 
     override fun register(kord: Kord) {
         job = CoroutineScope(Dispatchers.Default).launch {
-            while (true) {
-                run(kord)
+            while (coroutineContext.isActive) {
                 delay(determineSleepTime().toJavaDuration())
+                run(kord)
             }
         }
     }
