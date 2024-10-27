@@ -31,10 +31,10 @@ object Interactions {
             }.also {
                 commands.add(it)
             }
-            kord.on<ActionInteractionCreateEvent> {
-                if (this.interaction.data.data.name.value!! != name) return@on
-                interactionCommand.handleInteraction(this, kord)
-            }
+        }
+        kord.on<ActionInteractionCreateEvent> {
+            interactions.find { it.name == this.interaction.data.data.name.value!! }
+                ?.handleInteraction(this, kord)
         }
         if (tempCommandPrefix != null) {
             val shutdownCommandName = "$tempCommandPrefix-shutdown"
@@ -76,6 +76,7 @@ object Interactions {
         Dalle,
         NorthernLights,
         Ghost,
+        ScheduleEventChannel,
     )
 
     fun asIterable(): Iterable<Interaction> {

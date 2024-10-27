@@ -30,14 +30,19 @@ import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.toMessageFormat
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.Instant
 import java.time.ZoneId
+import java.util.concurrent.ConcurrentHashMap
 
 object Planner : Feature {
-    private val locations by lazy { Locations.fromEnvironment() }
+    val locations by lazy { Locations.fromEnvironment() }
     private val jobs = mutableListOf<Job>()
     private const val PLANNER_IDEA_JOIN_PREFIX = "planner_join_idea_"
     private val validEventChannelName = Regex("(idea|[0-9]{4}-[0-9]{2}-[0-9]{2})-.+")
+    private val lastUpdate = ConcurrentHashMap<Snowflake, Instant>()
+    private val mutex = Mutex()
 
     override fun register(kord: Kord) {
         kord.on<MessageCreateEvent> {
@@ -75,63 +80,51 @@ object Planner : Feature {
                 return@on
             }
 
-            handleRename()
-        }.also { jobs.add(it) }
-
-        kord.on<ActionInteractionCreateEvent> {
-            val customId = interaction.data.data.customId.value!!
-
-            when {
-                customId.startsWith(PLANNER_IDEA_JOIN_PREFIX) -> {
-                    val response = interaction.deferEphemeralResponse()
-                    val user = interaction.user.asMember(interaction.channel.asChannelOf<TextChannel>().guildId)
-                    val channelId = customId.removePrefix(PLANNER_IDEA_JOIN_PREFIX)
-                    val channel = kord.getChannelOf<TextChannel>(Snowflake(channelId))!!
-                    channel.editMemberPermission(user.id) {
-                        this.allowed += Permissions(
-                            Permission.ViewChannel,
-                            Permission.ReadMessageHistory,
-                            Permission.SendMessages,
-                        )
-                    }
-                    response.respond {
-                        content = "You have been added to the channel"
-                    }
+            mutex.withLock {
+                if (lastUpdate[categoryChannel.id]?.isAfter(Instant.now().minusSeconds(5)) == true) {
+                    // Already handled
+                    return@on
                 }
-
-                else -> return@on
+                handleRename()
+                lastUpdate[categoryChannel.id] = Instant.now()
             }
         }.also { jobs.add(it) }
 
-        jobs.add(runBlocking {
-            CoroutineScope(Dispatchers.Default).launch {
-                // determine next 1AM and schedule the job
-                val now = Instant.now().atZone(ZoneId.of("Europe/Copenhagen"))
-                val next1AM = now.withHour(1).withMinute(0).withSecond(0).withNano(0).let {
-                    if (now.isAfter(it)) {
-                        it.plusDays(1)
-                    } else {
-                        it
-                    }
+        kord.on<ActionInteractionCreateEvent> {
+            handleButtonClick()
+        }.also { jobs.add(it) }
+
+
+        jobs.add(CoroutineScope(Dispatchers.Default).launch {
+            // determine next 1AM and schedule the job
+            val now = Instant.now().atZone(ZoneId.of("Europe/Copenhagen"))
+            val next1AM = now.withHour(1).withMinute(0).withSecond(0).withNano(0).let {
+                if (now.isAfter(it)) {
+                    it.plusDays(1)
+                } else {
+                    it
                 }
-                val delayMillis = next1AM.toInstant().toEpochMilli() - now.toInstant().toEpochMilli()
-                val upcomingEventsCategory = kord.getChannelOf<Category>(locations.upcomingEventsSnowflake)!!
-                organiseCategoryChannels(upcomingEventsCategory)
-                delay(delayMillis)
-                while (coroutineContext.isActive) {
-                    organiseCategoryChannels(upcomingEventsCategory)
-                    delay(24 * 60 * 60 * 1000)
-                }
+            }
+            organiseEventChannels(kord)
+            delay(next1AM.toInstant().toEpochMilli() - now.toInstant().toEpochMilli())
+            while (coroutineContext.isActive) {
+                organiseEventChannels(kord)
+                delay(24 * 60 * 60 * 1000)
             }
         })
 
         logger.info { "Planner registered" }
     }
 
+    suspend fun organiseEventChannels(kord: Kord) {
+        val category = kord.getChannelOf<Category>(locations.upcomingEventsSnowflake)!!
+        organiseCategoryChannels(category)
+    }
+
     private suspend fun organiseCategoryChannels(category: CategoryBehavior) {
         val channels = category.channels.toList()
 
-        val sortedChannels = channels.sortedWith(comparator = Comparator { o1, o2 ->
+        val sortedChannels = channels.sortedWith(comparator = { o1, o2 ->
             if (o1.name.startsWith("idea") && o2.name.startsWith("idea")) {
                 o1.name.compareTo(o2.name)
             } else if (o1.name.startsWith("idea")) {
@@ -171,6 +164,31 @@ object Planner : Feature {
         }
     }
 
+    private suspend fun ActionInteractionCreateEvent.handleButtonClick() {
+        val customId = interaction.data.data.customId.value!!
+
+        when {
+            customId.startsWith(PLANNER_IDEA_JOIN_PREFIX) -> {
+                val response = interaction.deferEphemeralResponse()
+                val user = interaction.user.asMember(interaction.channel.asChannelOf<TextChannel>().guildId)
+                val channelId = customId.removePrefix(PLANNER_IDEA_JOIN_PREFIX)
+                val channel = kord.getChannelOf<TextChannel>(Snowflake(channelId))!!
+                channel.editMemberPermission(user.id) {
+                    this.allowed += Permissions(
+                        Permission.ViewChannel,
+                        Permission.ReadMessageHistory,
+                        Permission.SendMessages,
+                    )
+                }
+                response.respond {
+                    content = "You have been added to the channel"
+                }
+            }
+
+            else -> return
+        }
+    }
+
     private suspend fun ChannelUpdateEvent.handleRename() {
         val categoryChannel = this.channel.asChannelOf<CategorizableChannel>()
         val earlierName = this.old?.data?.name?.value
@@ -184,42 +202,40 @@ object Planner : Feature {
                     "Channel names must follow the format `idea-<word1>-<word2>-...-<wordN>` or `<year>-<month>-<day>-<word1>-<word2>-...-<wordN>`. Please fix this issue so that the bot automations can work as expected."
             }
             return
-        } else {
+        } else if (!Regex("(^idea|🔕|private)").containsMatchIn(categoryChannel.name)) {
+            // Calendared event, not private, new date? Announce!
             categoryChannel.asChannelOf<TextChannel>()
                 .createMessage("Channel name updated to \"${categoryChannel.name}\" (earlier \"$earlierName\")")
-            if (!Regex("(^idea|🔕|private)").containsMatchIn(categoryChannel.name)) {
-                // Calendared event, not private, new date? Announce
-                val announcementChannel = kord.getChannelOf<TextChannel>(locations.announcementChannelSnowflake)!!
-                val dateComponents = categoryChannel.name.split("-").take(3)
-                val date = Instant.now().atZone(ZoneId.of("Europe/Copenhagen")).let {
-                    it.withYear(dateComponents[0].toInt())
-                        .withMonth(dateComponents[1].toInt())
-                        .withDayOfMonth(dateComponents[2].toInt())
-                        .withHour(14)
-                        .withMinute(0)
-                        .withSecond(0)
-                        .withNano(0)
-                }
-                if (date.toInstant().isAfter(Instant.now())) {
-                    announcementChannel.createMessage {
-                        content = """
+            val announcementChannel = kord.getChannelOf<TextChannel>(locations.announcementChannelSnowflake)!!
+            val dateComponents = categoryChannel.name.split("-").take(3)
+            val date = Instant.now().atZone(ZoneId.of("Europe/Copenhagen")).let {
+                it.withYear(dateComponents[0].toInt())
+                    .withMonth(dateComponents[1].toInt())
+                    .withDayOfMonth(dateComponents[2].toInt())
+                    .withHour(14)
+                    .withMinute(0)
+                    .withSecond(0)
+                    .withNano(0)
+            }
+            if (date.toInstant().isAfter(Instant.now())) {
+                announcementChannel.createMessage {
+                    content = """
                             Event `${categoryChannel.name}` scheduled ~${
-                            date.toInstant().toMessageFormat()
-                        } has been updated:
+                        date.toInstant().toMessageFormat()
+                    } has been updated:
                             
                             > ${categoryChannel.asChannelOf<TextChannel>().topic}
                             
                         """.trimIndent()
 
-                        actionRow {
-                            interactionButton(
-                                style = ButtonStyle.Primary,
-                                customId = "${PLANNER_IDEA_JOIN_PREFIX}${categoryChannel.id.value}",
-                                builder = {
-                                    this.label = "I'm interested!"
-                                }
-                            )
-                        }
+                    actionRow {
+                        interactionButton(
+                            style = ButtonStyle.Primary,
+                            customId = "${PLANNER_IDEA_JOIN_PREFIX}${categoryChannel.id.value}",
+                            builder = {
+                                this.label = "I'm interested!"
+                            }
+                        )
                     }
                 }
             }
@@ -269,7 +285,7 @@ object Planner : Feature {
                     .startPublicThreadWithMessage(scheduleMessage.id, "Scheduling tool recommendation")
             }
             .createMessage("@mtib is working on an integrated polling tool, but it's not ready yet. Help me out if you can.")
-        ideaChannel.createMessage("${author.mention} has admin rights in this channel, and can give them to others using the \"Edit Channel\" settings. They can add and remove members, make others admins; and rename and delete the channel. Anyone can leave the channel by writing `/leave` here.\n\nWhen you settled on a date, please rename the channel to `<year>-<month>-<day>-...`. I will use this for notifications and archiving.")
+        ideaChannel.createMessage("${author.mention} has admin rights in this channel, and can give them to others using the \"Edit Channel\" settings. They can add and remove members, make others admins; and rename and delete the channel. Anyone can leave the channel by writing `/leave` here.\n\nWhen you settled on a date, please rename the channel to `<year>-<month>-<day>-...` or use the `/schedule_event` command. I will use this for notifications and archiving.")
 
         message.delete("Idea received")
         message.channel.createMessage {
