@@ -23,9 +23,19 @@ object ScheduleEventChannel : Interaction {
 
     override suspend fun build(it: GlobalChatInputCreateBuilder) {
         super.build(it)
-        it.integer("year", "Year of the event")
-        it.integer("month", "Month of the event")
-        it.integer("day", "Day of the event")
+        it.integer("year", "Year of the event") {
+            required = true
+        }
+        it.integer("month", "Month of the event") {
+            required = true
+            minValue = 1
+            maxValue = 12
+        }
+        it.integer("day", "Day of the event") {
+            required = true
+            minValue = 1
+            maxValue = 31
+        }
         it.dmPermission = false
     }
 
