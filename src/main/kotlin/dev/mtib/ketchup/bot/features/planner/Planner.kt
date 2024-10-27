@@ -43,6 +43,7 @@ object Planner : Feature {
     private val validEventChannelName = Regex("(idea|[0-9]{4}-[0-9]{2}-[0-9]{2})-.+")
     private val lastUpdate = ConcurrentHashMap<Snowflake, Instant>()
     private val mutex = Mutex()
+    private val sendDebugData = false
 
     override fun register(kord: Kord) {
         kord.on<MessageCreateEvent> {
@@ -290,6 +291,8 @@ object Planner : Feature {
         message.delete("Idea received")
         message.channel.createMessage {
             content = """
+                # New event idea
+                
                 ${author.mention} created an event:
                 
                 ${description.lines().joinToString("\n") { "> $it" }}
@@ -306,10 +309,12 @@ object Planner : Feature {
                     }
                 )
             }
-        }.let {
-            it.channel.asChannelOf<TextChannel>()
-                .startPublicThreadWithMessage(it.id, parsedIdeaDto.channelName + " debug data")
-                .also { thread -> thread.createMessage(parsedIdeaDto.toDiscordMarkdownString()) }
+        }.also {
+            if (sendDebugData) {
+                it.channel.asChannelOf<TextChannel>()
+                    .startPublicThreadWithMessage(it.id, parsedIdeaDto.channelName + " debug data")
+                    .also { thread -> thread.createMessage(parsedIdeaDto.toDiscordMarkdownString()) }
+            }
         }
     }
 
