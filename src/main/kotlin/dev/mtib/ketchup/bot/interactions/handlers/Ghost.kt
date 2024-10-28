@@ -1,12 +1,10 @@
 package dev.mtib.ketchup.bot.interactions.handlers
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.kord.core.Kord
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ActionInteractionCreateEvent
-import dev.kord.rest.builder.interaction.GlobalChatInputCreateBuilder
-import dev.kord.rest.builder.interaction.boolean
-import dev.kord.rest.builder.interaction.number
-import dev.kord.rest.builder.interaction.string
+import dev.kord.rest.builder.interaction.*
 import dev.mtib.ketchup.bot.features.homeassistant.Client
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getBooleanOptionByName
@@ -19,26 +17,43 @@ object Ghost : Interaction {
     override val description: String = "Changes the color of the ghost"
 
     override suspend fun build(it: GlobalChatInputCreateBuilder) {
-        it.string("color", "The color of the ghost") {
-            required = true
-            kotlin.runCatching {
-                Client.keepColors.forEach {
-                    this.choice(it, it)
+        it.subCommand("color", "Change the color of the ghost") {
+            string("color", "The color of the ghost") {
+                required = true
+                kotlin.runCatching {
+                    Client.keepColors.forEach {
+                        this.choice(it, it)
+                    }
                 }
             }
+            number("brightness", "The brightness of the ghost") {
+                required = false
+                minValue = 0.0
+                maxValue = 255.0
+            }
+            boolean("fog", "Set fog machine on or off") {
+                required = false
+            }
         }
-        it.number("brightness", "The brightness of the ghost") {
-            required = false
-            minValue = 0.0
-            maxValue = 255.0
-        }
-        it.boolean("fog", "Set fog machine on or off") {
-            required = false
+        it.subCommand("hex", "Change the color of the ghost using hex") {
+            string("hex_code", "The hex color of the ghost (starting # is optional)") {
+                required = true
+            }
+            boolean("fog", "Set fog machine on or off") {
+                required = false
+            }
         }
     }
 
     override suspend fun handleInteraction(event: ActionInteractionCreateEvent, kord: Kord) {
         val response = event.defer()
+
+        response.respond {
+            content = "```\n" + jacksonObjectMapper().writerWithDefaultPrettyPrinter()
+                .writeValueAsString(event.interaction.data.data.options) + "\n```"
+        }
+        return;
+
         val color = event.interaction.getStringOptionByName("color")
         val brightness = event.interaction.getNumberOptionByName("brightness")?.toInt() ?: 255
         val fog = event.interaction.getBooleanOptionByName("fog") ?: false

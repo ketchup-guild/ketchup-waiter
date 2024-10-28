@@ -166,7 +166,7 @@ object Planner : Feature {
     }
 
     private suspend fun ActionInteractionCreateEvent.handleButtonClick() {
-        val customId = interaction.data.data.customId.value!!
+        val customId = interaction.data.data.customId.value ?: return
 
         when {
             customId.startsWith(PLANNER_IDEA_JOIN_PREFIX) -> {

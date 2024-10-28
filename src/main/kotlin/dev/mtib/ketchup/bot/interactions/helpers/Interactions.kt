@@ -13,17 +13,18 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 object Interactions {
     private val logger = KotlinLogging.logger { }
     private const val COMMAND_PREFIX_ENV = "TEMP_COMMAND_PREFIX"
+    private const val COMMAND_FILTER_ENV = "TEMP_COMMAND_FILTER"
     private val tempCommandPrefix: String? by lazy { System.getenv(COMMAND_PREFIX_ENV) }
     private val commands = mutableSetOf<ApplicationCommand>()
 
     suspend fun register(kord: Kord) {
-        interactions.forEach { interactionCommand ->
+        fun String.tempPrefixed(): String = when {
+            tempCommandPrefix != null -> "$tempCommandPrefix-$this"
+            else -> this
+        }
+        filteredInteractions.forEach { interactionCommand ->
             logger.info { "Registering interaction ${interactionCommand::class.simpleName}" }
-            val name = if (tempCommandPrefix != null) {
-                "$tempCommandPrefix-${interactionCommand.name}"
-            } else {
-                interactionCommand.name
-            }
+            val name = interactionCommand.name.tempPrefixed()
             kord.createGlobalChatInputCommand(name, interactionCommand.description) {
                 this.dmPermission = false
                 this.defaultMemberPermissions = null
@@ -33,11 +34,11 @@ object Interactions {
             }
         }
         kord.on<ActionInteractionCreateEvent> {
-            interactions.find { it.name == this.interaction.data.data.name.value!! }
+            filteredInteractions.find { it.name.tempPrefixed() == this.interaction.data.data.name.value!! }
                 ?.handleInteraction(this, kord)
         }
         if (tempCommandPrefix != null) {
-            val shutdownCommandName = "$tempCommandPrefix-shutdown"
+            val shutdownCommandName = "shutdown".tempPrefixed()
             kord.createGlobalChatInputCommand(shutdownCommandName, "Clean shutdown") {
                 this.dmPermission = true
                 this.defaultMemberPermissions = null
@@ -82,6 +83,18 @@ object Interactions {
     fun asIterable(): Iterable<Interaction> {
         return interactions.asIterable()
     }
+
+    val filteredInteractions: List<Interaction>
+        get() {
+            val regexString = System.getenv(COMMAND_FILTER_ENV)
+            if (regexString != null) {
+                val re = Regex(regexString)
+                return interactions.filter {
+                    it.name.matches(re)
+                }
+            }
+            return interactions.toList()
+        }
 
     fun ActionInteractionCreateEvent.shouldIgnore(): Boolean {
         return this.interaction.user.isBot || (this.interaction.user.isGod && !ToggleRespondToGod.respondToGod)
