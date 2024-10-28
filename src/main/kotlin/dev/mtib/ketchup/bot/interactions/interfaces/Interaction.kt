@@ -1,6 +1,5 @@
 package dev.mtib.ketchup.bot.interactions.interfaces
 
-import dev.kord.common.entity.optional.firstOrNull
 import dev.kord.core.Kord
 import dev.kord.core.behavior.interaction.response.DeferredMessageInteractionResponseBehavior
 import dev.kord.core.entity.interaction.ActionInteraction
@@ -21,13 +20,46 @@ interface Interaction {
             PRIVATE
         }
 
+        private inline fun <reified T> ActionInteraction.getOptionByNameOrNull(name: String): T? {
+            val entry = data.data.options.value ?: return null
+
+            entry.forEach { current ->
+                if (current.name == name) {
+                    val v = current.value.value?.value
+                    if (v != null && v is T) {
+                        return v
+                    }
+                }
+
+                current.values.value?.forEach { arg ->
+                    if (arg.name == name) {
+                        val v = arg.value
+                        if (v != null && v is T) {
+                            return v
+                        }
+                    }
+                }
+            }
+
+            return null
+        }
+
+        fun ActionInteraction.isSubcommand(name: String): Boolean {
+            return data.data.options.value?.any { it.name == name } ?: false
+        }
+
+        suspend fun ActionInteraction.onSubcommand(name: String, block: suspend ActionInteraction.() -> Unit) {
+            if (isSubcommand(name)) {
+                block()
+            }
+        }
+
         fun ActionInteraction.getStringOptionByName(name: String): String? {
-            return this.data.data.options.firstOrNull { it.name == name }?.value?.value?.value?.toString()
+            return getOptionByNameOrNull(name)
         }
 
         fun ActionInteraction.getNumberOptionByName(name: String): Double? {
-            val value = this.data.data.options.firstOrNull { it.name == name }?.value?.value?.value
-            return when (value) {
+            return when (val value = getOptionByNameOrNull<Any>(name)) {
                 is Double -> value
                 is String -> value.toDouble()
                 is Int -> value.toDouble()
@@ -36,7 +68,7 @@ interface Interaction {
         }
 
         fun ActionInteraction.getBooleanOptionByName(name: String): Boolean? {
-            return this.data.data.options.firstOrNull { it.name == name }?.value?.value?.value as? Boolean
+            return getOptionByNameOrNull(name)
         }
     }
 

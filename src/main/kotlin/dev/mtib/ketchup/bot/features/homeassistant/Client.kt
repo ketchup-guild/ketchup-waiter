@@ -12,12 +12,52 @@ object Client {
     private val token: String? by lazy { System.getenv("HOME_ASSISTANT_TOKEN") }
     private val baseUrl: String? by lazy { System.getenv("HOME_ASSISTANT_BASE_URL") }
 
+    sealed class ColorSpec<T> {
+        abstract val key: String
+        abstract val value: T
+    }
+
+    class ColorName(val name: String) : ColorSpec<String>() {
+        companion object {
+            fun String.asColorName(): ColorName = ColorName(this)
+        }
+
+        override val key: String = "color_name"
+        override val value: String = name
+    }
+
+    class ColorHex private constructor(hex: String) : ColorSpec<List<Int>>() {
+        companion object {
+            private fun parseHex(hex: String): String {
+                val cleanedHex = hex.removePrefix("#")
+                require(cleanedHex.length in listOf(3, 6)) { "Invalid hex length: ${cleanedHex.length}" }
+                if (cleanedHex.length == 3) {
+                    return cleanedHex.flatMap { listOf(it, it) }.joinToString("")
+                }
+                return cleanedHex
+            }
+
+            fun String.toColorHex(): ColorHex = ColorHex(parseHex(this))
+            operator fun ColorHex.invoke(hex: String) = ColorHex(parseHex(hex))
+        }
+
+
+        val brightness: Int = hex.chunked(2).map { it.toInt(16) }.plus(0).max()
+        override val key: String = "rgb_color"
+        override val value: List<Int> = hex.chunked(2).map { it.toInt(16) }
+
+        override fun toString(): String {
+            return "#${value.joinToString("") { it.toString(16).padStart(2, '0') }}"
+        }
+    }
+
+
     /**
      * @param color The color to set the light to
      * @param brightness The brightness to set the light to (0-255)
      * @param entities The entities to set the light on
      */
-    fun setLight(color: String, brightness: Int, vararg entities: String) {
+    fun setLight(color: ColorSpec<*>, brightness: Int, vararg entities: String) {
         if (baseUrl == null || token == null) {
             throw IllegalStateException("Home Assistant token or base URL not set")
         }
@@ -29,8 +69,8 @@ object Client {
         val body = mapOf(
             "entity_id" to entities,
             "brightness" to brightness,
-            "color_name" to color,
-            "transition" to 0
+            color.key to color.value,
+            "transition" to 0,
         )
         val request = okhttp3.Request.Builder()
             .url(url)
