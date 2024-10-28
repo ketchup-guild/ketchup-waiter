@@ -9,18 +9,18 @@ import dev.mtib.ketchup.bot.features.homeassistant.Client.ColorHex.Companion.toC
 import dev.mtib.ketchup.bot.features.homeassistant.Client.ColorName.Companion.asColorName
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getBooleanOptionByName
-import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getNumberOptionByName
+import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getDoubleOptionByName
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getStringOptionByName
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.onSubcommand
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlin.time.Duration.Companion.minutes
 
 object Ghost : Interaction {
     override val visibility: Interaction.Companion.Visibility = Interaction.Companion.Visibility.PUBLIC
     override val name: String = "ghost"
     override val description: String = "Changes the color of the ghost"
+
+    private var lastFoggerJob: Job? = null
 
     override suspend fun build(it: GlobalChatInputCreateBuilder) {
         it.subCommand("color", "Change the color of the ghost") {
@@ -56,16 +56,13 @@ object Ghost : Interaction {
 
         event.interaction.onSubcommand("color") {
             val color = event.interaction.getStringOptionByName("color")!!
-            val brightness = event.interaction.getNumberOptionByName("brightness")?.toInt() ?: 255
+            val brightness = event.interaction.getDoubleOptionByName("brightness")?.toInt() ?: 255
             val fog = event.interaction.getBooleanOptionByName("fog") ?: false
             kotlin.runCatching {
                 Client.setLight(color.asColorName(), brightness, "light.ghost")
                 Client.setLight(fog, "light.ghost_fogger")
                 if (fog) {
-                    delay(10.minutes)
-                    CoroutineScope(kord.coroutineContext).launch {
-                        Client.setLight(false, "light.ghost_fogger")
-                    }
+                    setFoggerTimeout()
                 }
             }.fold(
                 onSuccess = {
@@ -90,10 +87,7 @@ object Ghost : Interaction {
                 Client.setLight(color, color.brightness, "light.ghost")
                 Client.setLight(fog, "light.ghost_fogger")
                 if (fog) {
-                    delay(10.minutes)
-                    CoroutineScope(kord.coroutineContext).launch {
-                        Client.setLight(false, "light.ghost_fogger")
-                    }
+                    setFoggerTimeout()
                 }
                 color
             }.fold(
@@ -108,6 +102,19 @@ object Ghost : Interaction {
                     }
                 }
             )
+        }
+    }
+
+    private fun setFoggerTimeout() {
+        synchronized(Ghost) {
+            lastFoggerJob?.cancel()
+            lastFoggerJob = CoroutineScope(Dispatchers.Default).launch {
+                delay(10.minutes)
+                synchronized(Ghost) {
+                    Client.setLight(false, "light.ghost_fogger")
+                    lastFoggerJob = null
+                }
+            }
         }
     }
 }

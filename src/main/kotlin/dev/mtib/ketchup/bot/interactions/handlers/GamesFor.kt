@@ -11,7 +11,7 @@ import dev.mtib.ketchup.bot.features.notion.models.NotionGame.Companion.filterBy
 import dev.mtib.ketchup.bot.features.notion.models.NotionGame.Companion.toOwnerMarkdown
 import dev.mtib.ketchup.bot.interactions.helpers.Interactions.shouldIgnore
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
-import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getNumberOptionByName
+import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getDoubleOptionByName
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getStringOptionByName
 
 object GamesFor : Interaction {
@@ -34,7 +34,7 @@ object GamesFor : Interaction {
         }
         val response = event.defer()
 
-        val numberOfPlayers = event.interaction.getNumberOptionByName("players")?.toInt()
+        val numberOfPlayers = event.interaction.getDoubleOptionByName("players")?.toInt()
 
         if (numberOfPlayers == null) {
             response.respond {

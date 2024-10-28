@@ -6,12 +6,12 @@ import dev.kord.core.entity.channel.TextChannel
 import dev.mtib.ketchup.bot.features.Feature
 import dev.mtib.ketchup.bot.features.northernlights.models.Forecast
 import dev.mtib.ketchup.bot.utils.getEnv
+import dev.mtib.ketchup.bot.utils.ketchupZone
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import kotlinx.coroutines.time.delay
 import kotlinx.datetime.Clock
 import kotlinx.datetime.toJavaInstant
-import java.time.ZoneId
 import java.time.ZonedDateTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -37,7 +37,7 @@ object NorthernLightsDigest : Feature {
     private fun determineSleepTime(): Duration {
         val now = Clock.System.now().toJavaInstant()
         val next6PM =
-            ZonedDateTime.now(ZoneId.of("Europe/Copenhagen")).withHour(18).withMinute(0).withSecond(0).withNano(0)!!
+            ZonedDateTime.now(ketchupZone).withHour(18).withMinute(0).withSecond(0).withNano(0)!!
         return (
                 if (now.isAfter(next6PM.toInstant())) {
                     next6PM.plusDays(1)

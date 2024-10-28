@@ -11,7 +11,7 @@ import dev.mtib.ketchup.bot.features.notion.models.NotionGame.Companion.filterBy
 import dev.mtib.ketchup.bot.features.notion.models.NotionGame.Companion.toOwnerMarkdown
 import dev.mtib.ketchup.bot.interactions.helpers.Interactions.shouldIgnore
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
-import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getNumberOptionByName
+import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getDoubleOptionByName
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getStringOptionByName
 
 object GamesBetween : Interaction {
@@ -35,8 +35,8 @@ object GamesBetween : Interaction {
         }
         val response = event.defer()
 
-        val minNumberOfPlayers = event.interaction.getNumberOptionByName("min")?.toInt()
-        val maxNumberOfPlayers = event.interaction.getNumberOptionByName("max")?.toInt()
+        val minNumberOfPlayers = event.interaction.getDoubleOptionByName("min")?.toInt()
+        val maxNumberOfPlayers = event.interaction.getDoubleOptionByName("max")?.toInt()
 
         if (minNumberOfPlayers == null || maxNumberOfPlayers == null || minNumberOfPlayers > maxNumberOfPlayers) {
             response.respond {

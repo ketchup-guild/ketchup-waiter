@@ -12,9 +12,9 @@ import dev.mtib.ketchup.bot.features.planner.Planner
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.Visibility
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.Visibility.PUBLIC
-import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getNumberOptionByName
+import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getDoubleOptionByName
+import dev.mtib.ketchup.bot.utils.ketchupZone
 import java.time.Instant
-import java.time.ZoneId
 
 object ScheduleEventChannel : Interaction {
     override val visibility: Visibility = PUBLIC
@@ -41,11 +41,11 @@ object ScheduleEventChannel : Interaction {
 
     override suspend fun handleInteraction(event: ActionInteractionCreateEvent, kord: Kord) {
         val response = event.defer()
-        val year = event.interaction.getNumberOptionByName("year")?.toInt()!!
-        val month = event.interaction.getNumberOptionByName("month")?.toInt()!!
-        val day = event.interaction.getNumberOptionByName("day")?.toInt()!!
+        val year = event.interaction.getDoubleOptionByName("year")?.toInt()!!
+        val month = event.interaction.getDoubleOptionByName("month")?.toInt()!!
+        val day = event.interaction.getDoubleOptionByName("day")?.toInt()!!
 
-        val date = Instant.now().atZone(ZoneId.of("Europe/Copenhagen"))
+        val date = Instant.now().atZone(ketchupZone)
             .withYear(year)
             .withMonth(month)
             .withDayOfMonth(day)
@@ -62,11 +62,14 @@ object ScheduleEventChannel : Interaction {
             return
         }
 
+        val dateString = date.let {
+            "${it.year}-${it.monthValue.toString().padStart(2, '0')}-${it.dayOfMonth.toString().padStart(2, '0')}"
+        }
         val newName = channel.name.let {
             when {
-                it.startsWith("idea-") -> "$date-${it.substring(5)}"
-                it.matches(Regex("""\d{4}-\d{2}-\d{2}-.*""")) -> "$date-${it.substring(11)}"
-                else -> "$date-$it"
+                it.startsWith("idea-") -> "$dateString-${it.substring(5)}"
+                it.matches(Regex("""\d{4}-\d{2}-\d{2}-.*""")) -> "$dateString-${it.substring(11)}"
+                else -> "$dateString-$it"
             }
         }
         if (newName != channel.name) {

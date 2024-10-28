@@ -1,5 +1,6 @@
 package dev.mtib.ketchup.bot.interactions.interfaces
 
+import dev.kord.common.entity.CommandArgument
 import dev.kord.core.Kord
 import dev.kord.core.behavior.interaction.response.DeferredMessageInteractionResponseBehavior
 import dev.kord.core.entity.interaction.ActionInteraction
@@ -20,6 +21,18 @@ interface Interaction {
             PRIVATE
         }
 
+        private inline fun <reified T> List<CommandArgument<Any?>>.firstWithNameOrNull(name: String): T? {
+            this.forEach { arg ->
+                if (arg.name == name) {
+                    val v = arg.value
+                    if (v != null && v is T) {
+                        return v
+                    }
+                }
+            }
+            return null
+        }
+
         private inline fun <reified T> ActionInteraction.getOptionByNameOrNull(name: String): T? {
             val entry = data.data.options.value ?: return null
 
@@ -31,12 +44,13 @@ interface Interaction {
                     }
                 }
 
-                current.values.value?.forEach { arg ->
-                    if (arg.name == name) {
-                        val v = arg.value
-                        if (v != null && v is T) {
-                            return v
-                        }
+                current.values.value?.firstWithNameOrNull<T>(name)?.let {
+                    return it
+                }
+
+                current.subCommands.value?.forEach { subCommand ->
+                    subCommand.options.value?.firstWithNameOrNull<T>(name)?.let {
+                        return it
                     }
                 }
             }
@@ -48,8 +62,26 @@ interface Interaction {
             return data.data.options.value?.any { it.name == name } ?: false
         }
 
-        suspend fun ActionInteraction.onSubcommand(name: String, block: suspend ActionInteraction.() -> Unit) {
+        fun ActionInteraction.isSubcommand(group: String, name: String): Boolean {
+            return data.data.options.value?.any { it.name == group && it.subCommands.value?.any { it.name == name } == true }
+                ?: false
+        }
+
+        inline fun ActionInteraction.onSubcommand(
+            name: String,
+            block: ActionInteraction.() -> Unit
+        ) {
             if (isSubcommand(name)) {
+                block()
+            }
+        }
+
+        inline fun ActionInteraction.onSubcommand(
+            group: String,
+            name: String,
+            block: ActionInteraction.() -> Unit
+        ) {
+            if (isSubcommand(group, name)) {
                 block()
             }
         }
@@ -58,11 +90,12 @@ interface Interaction {
             return getOptionByNameOrNull(name)
         }
 
-        fun ActionInteraction.getNumberOptionByName(name: String): Double? {
+        fun ActionInteraction.getDoubleOptionByName(name: String): Double? {
             return when (val value = getOptionByNameOrNull<Any>(name)) {
                 is Double -> value
                 is String -> value.toDouble()
                 is Int -> value.toDouble()
+                is Long -> value.toDouble()
                 else -> null
             }
         }

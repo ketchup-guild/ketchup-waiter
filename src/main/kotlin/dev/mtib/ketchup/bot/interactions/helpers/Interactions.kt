@@ -64,20 +64,21 @@ object Interactions {
     }
 
     private val interactions = arrayOf<Interaction>(
-        Leave,
-        Help,
-        ReactionSubscription,
-        ScheduleMessage,
-        Rank,
-        GamesFor,
+        Create,
+        Dalle,
         GamesAll,
         GamesBetween,
-        ToggleRespondToGod,
-        Gpt,
-        Dalle,
-        NorthernLights,
+        GamesFor,
         Ghost,
+        Gpt,
+        Help,
+        Leave,
+        NorthernLights,
+        Rank,
+        ReactionSubscription,
         ScheduleEventChannel,
+        ScheduleMessage,
+        ToggleRespondToGod,
     )
 
     fun asIterable(): Iterable<Interaction> {

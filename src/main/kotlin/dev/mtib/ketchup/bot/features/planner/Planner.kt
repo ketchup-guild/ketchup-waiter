@@ -15,6 +15,7 @@ import dev.kord.core.Kord
 import dev.kord.core.behavior.channel.*
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.behavior.reply
+import dev.kord.core.entity.Member
 import dev.kord.core.entity.channel.CategorizableChannel
 import dev.kord.core.entity.channel.Category
 import dev.kord.core.entity.channel.TextChannel
@@ -27,6 +28,7 @@ import dev.mtib.ketchup.bot.features.Feature
 import dev.mtib.ketchup.bot.features.planner.models.IdeaDto
 import dev.mtib.ketchup.bot.features.planner.storage.Locations
 import dev.mtib.ketchup.bot.storage.Storage
+import dev.mtib.ketchup.bot.utils.ketchupZone
 import dev.mtib.ketchup.bot.utils.toMessageFormat
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.toList
@@ -44,6 +46,7 @@ object Planner : Feature {
     private val lastUpdate = ConcurrentHashMap<Snowflake, Instant>()
     private val mutex = Mutex()
     private val sendDebugData = false
+    const val BELL = "🔕"
 
     override fun register(kord: Kord) {
         kord.on<MessageCreateEvent> {
@@ -98,7 +101,7 @@ object Planner : Feature {
 
         jobs.add(CoroutineScope(Dispatchers.Default).launch {
             // determine next 1AM and schedule the job
-            val now = Instant.now().atZone(ZoneId.of("Europe/Copenhagen"))
+            val now = Instant.now().atZone(ketchupZone)
             val next1AM = now.withHour(1).withMinute(0).withSecond(0).withNano(0).let {
                 if (now.isAfter(it)) {
                     it.plusDays(1)
@@ -147,7 +150,7 @@ object Planner : Feature {
             }
         }
 
-        val currentDateString = Instant.now().atZone(ZoneId.of("Europe/Copenhagen")).let {
+        val currentDateString = Instant.now().atZone(ketchupZone).let {
             "${it.year}-${it.monthValue.toString().padStart(2, '0')}-${
                 it.dayOfMonth.toString().padStart(2, '0')
             }"
@@ -203,13 +206,13 @@ object Planner : Feature {
                     "Channel names must follow the format `idea-<word1>-<word2>-...-<wordN>` or `<year>-<month>-<day>-<word1>-<word2>-...-<wordN>`. Please fix this issue so that the bot automations can work as expected."
             }
             return
-        } else if (!Regex("(^idea|🔕|private)").containsMatchIn(categoryChannel.name)) {
+        } else if (!Regex("(^idea|$BELL|private)").containsMatchIn(categoryChannel.name)) {
             // Calendared event, not private, new date? Announce!
             categoryChannel.asChannelOf<TextChannel>()
                 .createMessage("Channel name updated to \"${categoryChannel.name}\" (earlier \"$earlierName\")")
             val announcementChannel = kord.getChannelOf<TextChannel>(locations.announcementChannelSnowflake)!!
             val dateComponents = categoryChannel.name.split("-").take(3)
-            val date = Instant.now().atZone(ZoneId.of("Europe/Copenhagen")).let {
+            val date = Instant.now().atZone(ketchupZone).let {
                 it.withYear(dateComponents[0].toInt())
                     .withMonth(dateComponents[1].toInt())
                     .withDayOfMonth(dateComponents[2].toInt())
@@ -258,26 +261,7 @@ object Planner : Feature {
             return
         }
 
-        val category = kord.getChannelOf<Category>(locations.upcomingEventsSnowflake)!!
-        val ideaChannel = category.createTextChannel(
-            name = parsedIdeaDto.channelName,
-        ) {
-            topic = parsedIdeaDto.summary
-            this.position = 0
-        }
-
-        organiseCategoryChannels(category)
-
-        ideaChannel.editMemberPermission(message.author!!.id) {
-            this.allowed += Permissions(
-                Permission.ViewChannel,
-                Permission.ReadMessageHistory,
-                Permission.SendMessages,
-                Permission.ManageMessages,
-                Permission.ManageThreads,
-                Permission.ManageChannels,
-            )
-        }
+        val ideaChannel = createPrivateIdeaChannel(kord, parsedIdeaDto.channelName, parsedIdeaDto.summary, author)
 
         ideaChannel.createMessage(parsedIdeaDto.setup)
         ideaChannel.createMessage("Feel free to organise in any way you want, but I recommend using https://rallly.co/ or https://rallly.mtib.dev/ to schedule the event.")
@@ -316,6 +300,30 @@ object Planner : Feature {
                     .also { thread -> thread.createMessage(parsedIdeaDto.toDiscordMarkdownString()) }
             }
         }
+    }
+
+    public suspend fun createPrivateIdeaChannel(kord: Kord, name: String, topic: String, admin: Member): TextChannel {
+        val category = kord.getChannelOf<Category>(locations.upcomingEventsSnowflake)!!
+        val ideaChannel = category.createTextChannel(
+            name = name,
+        ) {
+            this.topic = topic
+            this.position = 0
+        }
+
+        organiseCategoryChannels(category)
+
+        ideaChannel.editMemberPermission(admin.id) {
+            this.allowed += Permissions(
+                Permission.ViewChannel,
+                Permission.ReadMessageHistory,
+                Permission.SendMessages,
+                Permission.ManageMessages,
+                Permission.ManageThreads,
+                Permission.ManageChannels,
+            )
+        }
+        return ideaChannel
     }
 
     private suspend fun getChannelSlug(description: String): IdeaDto {
