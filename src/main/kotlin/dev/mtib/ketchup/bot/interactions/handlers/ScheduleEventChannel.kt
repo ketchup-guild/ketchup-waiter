@@ -1,5 +1,6 @@
 package dev.mtib.ketchup.bot.interactions.handlers
 
+import dev.kord.common.DiscordTimestampStyle
 import dev.kord.core.Kord
 import dev.kord.core.behavior.channel.asChannelOf
 import dev.kord.core.behavior.channel.edit
@@ -14,6 +15,7 @@ import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.Visibi
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.Visibility.PUBLIC
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getDoubleOptionByName
 import dev.mtib.ketchup.bot.utils.ketchupZone
+import dev.mtib.ketchup.bot.utils.toMessageFormat
 import java.time.Instant
 
 object ScheduleEventChannel : Interaction {
@@ -80,7 +82,7 @@ object ScheduleEventChannel : Interaction {
         }
 
         response.respond {
-            content = "Event scheduled for $date"
+            content = "Event scheduled for ${date.toInstant().toMessageFormat(DiscordTimestampStyle.LongDate)}"
         }
     }
 }

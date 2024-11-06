@@ -321,6 +321,7 @@ object Planner : Feature {
                 Permission.ManageMessages,
                 Permission.ManageThreads,
                 Permission.ManageChannels,
+                Permission.ManageRoles,
             )
         }
         return ideaChannel
