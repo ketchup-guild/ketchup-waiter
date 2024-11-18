@@ -159,17 +159,21 @@ object Planner : Feature {
                 it.dayOfMonth.toString().padStart(2, '0')
             }"
         }
-        sortedChannels.filter { !it.name.startsWith("idea") && it.name < currentDateString }.let { pastEventChannels ->
-            if (pastEventChannels.isEmpty()) {
-                return@let
-            }
-            val archiveCategory = category.kord.getChannelOf<Category>(locations.eventArchiveSnowflake)!!
-            pastEventChannels.forEach {
-                it.asChannelOf<TextChannel>().edit {
-                    parentId = archiveCategory.id
+        sortedChannels
+            .filter { !it.name.startsWith("idea") && it.name < currentDateString }
+            .reversed()
+            .let { pastEventChannels ->
+                if (pastEventChannels.isEmpty()) {
+                    return@let
+                }
+                val archiveCategory = category.kord.getChannelOf<Category>(locations.eventArchiveSnowflake)!!
+                pastEventChannels.forEach {
+                    it.asChannelOf<TextChannel>().edit {
+                        parentId = archiveCategory.id
+                        position = 0
+                    }
                 }
             }
-        }
     }
 
     private suspend fun ActionInteractionCreateEvent.handleButtonClick() {
