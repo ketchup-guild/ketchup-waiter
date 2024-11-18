@@ -1,5 +1,8 @@
 package dev.mtib.ketchup.bot.features.planner
 
+import arrow.core.None
+import arrow.core.Option
+import arrow.core.toOption
 import com.aallam.openai.api.chat.ChatCompletionRequest
 import com.aallam.openai.api.chat.ChatMessage
 import com.aallam.openai.api.chat.ChatResponseFormat
@@ -18,6 +21,7 @@ import dev.kord.core.behavior.reply
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.channel.CategorizableChannel
 import dev.kord.core.entity.channel.Category
+import dev.kord.core.entity.channel.Channel
 import dev.kord.core.entity.channel.TextChannel
 import dev.kord.core.event.channel.ChannelUpdateEvent
 import dev.kord.core.event.interaction.ActionInteractionCreateEvent
@@ -193,6 +197,49 @@ object Planner : Feature {
         }
     }
 
+    private suspend fun Channel.announceChannel(oldName: Option<String> = None) {
+        val textChannel = this.asChannelOf<TextChannel>()
+
+        oldName.onSome {
+            textChannel.createMessage("Channel name updated to \"${textChannel.name}\" (earlier \"$it\")")
+        }
+        val announcementChannel = kord.getChannelOf<TextChannel>(locations.announcementChannelSnowflake)!!
+        val dateComponents = textChannel.name.split("-").take(3)
+        val date = Instant.now().atZone(ketchupZone).let {
+            it.withYear(dateComponents[0].toInt())
+                .withMonth(dateComponents[1].toInt())
+                .withDayOfMonth(dateComponents[2].toInt())
+                .withHour(14)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0)
+        }
+        if (date.toInstant().isAfter(Instant.now())) {
+            announcementChannel.createMessage {
+                content = """
+                    # Event has been scheduled
+                    
+                    Channel `${textChannel.name}` has scheduled an event for ~${date.toInstant().toMessageFormat()}:
+
+                    > ${textChannel.topic}
+
+                    If that sounds interesting to you, hit the button below to join the channel.
+                    
+                    """.trimIndent()
+
+                actionRow {
+                    interactionButton(
+                        style = ButtonStyle.Primary,
+                        customId = "${PLANNER_IDEA_JOIN_PREFIX}${id.value}",
+                        builder = {
+                            this.label = "I'm interested!"
+                        }
+                    )
+                }
+            }
+        }
+    }
+
     private suspend fun ChannelUpdateEvent.handleRename() {
         val categoryChannel = this.channel.asChannelOf<CategorizableChannel>()
         val earlierName = this.old?.data?.name?.value
@@ -208,41 +255,7 @@ object Planner : Feature {
             return
         } else if (!Regex("(^idea|$BELL|private)").containsMatchIn(categoryChannel.name)) {
             // Calendared event, not private, new date? Announce!
-            categoryChannel.asChannelOf<TextChannel>()
-                .createMessage("Channel name updated to \"${categoryChannel.name}\" (earlier \"$earlierName\")")
-            val announcementChannel = kord.getChannelOf<TextChannel>(locations.announcementChannelSnowflake)!!
-            val dateComponents = categoryChannel.name.split("-").take(3)
-            val date = Instant.now().atZone(ketchupZone).let {
-                it.withYear(dateComponents[0].toInt())
-                    .withMonth(dateComponents[1].toInt())
-                    .withDayOfMonth(dateComponents[2].toInt())
-                    .withHour(14)
-                    .withMinute(0)
-                    .withSecond(0)
-                    .withNano(0)
-            }
-            if (date.toInstant().isAfter(Instant.now())) {
-                announcementChannel.createMessage {
-                    content = """
-                            Event `${categoryChannel.name}` scheduled ~${
-                        date.toInstant().toMessageFormat()
-                    } has been updated:
-                            
-                            > ${categoryChannel.asChannelOf<TextChannel>().topic}
-                            
-                        """.trimIndent()
-
-                    actionRow {
-                        interactionButton(
-                            style = ButtonStyle.Primary,
-                            customId = "${PLANNER_IDEA_JOIN_PREFIX}${categoryChannel.id.value}",
-                            builder = {
-                                this.label = "I'm interested!"
-                            }
-                        )
-                    }
-                }
-            }
+            categoryChannel.announceChannel(earlierName.toOption())
         }
 
         organiseCategoryChannels(categoryChannel.category!!)
@@ -264,20 +277,14 @@ object Planner : Feature {
         val ideaChannel = createPrivateIdeaChannel(kord, parsedIdeaDto.channelName, parsedIdeaDto.summary, author)
 
         ideaChannel.createMessage(parsedIdeaDto.setup)
-        ideaChannel.createMessage("Feel free to organise in any way you want, but I recommend using https://rallly.co/ or https://rallly.mtib.dev/ to schedule the event.")
-            .let { scheduleMessage ->
-                scheduleMessage.channel.asChannelOf<TextChannel>()
-                    .startPublicThreadWithMessage(scheduleMessage.id, "Scheduling tool recommendation")
-            }
-            .createMessage("@mtib is working on an integrated polling tool, but it's not ready yet. Help me out if you can.")
         ideaChannel.createMessage("${author.mention} has admin rights in this channel, and can give them to others using the \"Edit Channel\" settings. They can add and remove members, make others admins; and rename and delete the channel. Anyone can leave the channel by writing `/leave` here.\n\nWhen you settled on a date, please rename the channel to `<year>-<month>-<day>-...` or use the `/schedule_event` command. I will use this for notifications and archiving.")
 
         message.delete("Idea received")
         message.channel.createMessage {
             content = """
-                # New event idea
+                # Event idea
                 
-                ${author.mention} created an event:
+                ## ${author.mention} created an event
                 
                 ${description.lines().joinToString("\n") { "> $it" }}
                 
@@ -298,6 +305,10 @@ object Planner : Feature {
                 it.channel.asChannelOf<TextChannel>()
                     .startPublicThreadWithMessage(it.id, parsedIdeaDto.channelName + " debug data")
                     .also { thread -> thread.createMessage(parsedIdeaDto.toDiscordMarkdownString()) }
+            }
+        }.also {
+            if (parsedIdeaDto.scheduled) {
+                ideaChannel.announceChannel()
             }
         }
     }
@@ -368,6 +379,8 @@ object Planner : Feature {
                                 Usually events are in Copenhagen, and use CET time. You do not need to include this information, but if the event is in another location or time zone you can include it.
                                 Never include links.
                                 Always use english, translate if necessary.
+                                
+                                The summary is supposed to be a short description of the event, and should be between 1 and 3 sentences. The call to action may be a single sentence, and should be a prompt for people to join the event. The setup is a message to post in the channel about further things to be discussed and ideas, and should be a few sentences long, you can use structured text using discord flavoured markdown.
                                 
                                 There is one exception to the channel name format. If the event is already known to happen at a specific date, instead format it as "<year>-<month>-<day>-<word1>-<word2>-...-<wordN>", where the date is the date of the event, pad month and day to 2 digits using 0. Iff this is the case, set "scheduled" to true.
                                 But never involve relative time in the channel name, like "tomorrow" or "next week".
