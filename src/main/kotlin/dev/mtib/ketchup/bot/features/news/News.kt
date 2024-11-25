@@ -1,14 +1,19 @@
 package dev.mtib.ketchup.bot.features.news
 
+import com.aallam.openai.api.chat.ChatCompletionRequest
+import com.aallam.openai.api.chat.ChatMessage
+import com.aallam.openai.api.model.ModelId
 import dev.kord.core.Kord
 import dev.kord.core.behavior.channel.createMessage
 import dev.kord.core.entity.channel.TextChannel
 import dev.mtib.ketchup.bot.features.Feature
 import dev.mtib.ketchup.bot.features.planner.storage.Locations
+import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.ketchupZone
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import java.time.ZonedDateTime
+import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 
 object News : Feature {
@@ -57,12 +62,47 @@ object News : Feature {
         logger.debug { "Generating news digest..." }
         val data = Client.fetchNews()
 
+        val openaiSummary = Storage().withOpenAi { openAi, textModel, _ ->
+            openAi.chatCompletion(
+                ChatCompletionRequest(
+                    model = ModelId(textModel.value),
+                    messages = listOf(
+                        ChatMessage.System(
+                            """
+                            You are a helpful discord AI assistant that helps a group of young adults to organise events.
+                            You will receive a list of events and news articles and you will pick a few to outline and prompt the members
+                            of the group to pick what they want to do.
+                            
+                            The members are interested in a variety of activities, such as sports, games, and movies. Lots of them have a technical background.
+                            
+                            Your response can contain formatted discord markdown, but it should be the body of the message only, as other information will be added to it.
+                            The message is also automatically going to get annotated with all the raw data and links, so you don't need to worry about that.
+                            
+                            The goal is to provide a summary of the news articles and events in a way that is engaging and informative.
+                            Filter out any irrelevant information and focus on the most important details.
+                            Remove any advertisments only relevant for tourists.
+                            
+                            You can also include prompts to do seasonal activities or events common to do in the 2 months following ${
+                                ZonedDateTime.now(
+                                    ketchupZone
+                                )
+                            }
+                        """.trimIndent()
+                        ),
+                    ) + data.map {
+                        ChatMessage.User("${it.title}\n\n${it.description}")
+                    },
+                )
+            ).choices.first().message.content!!
+        }
+
         val digest = channel.createMessage {
             content = buildString {
                 append(
                     "# News digest for ${
-                        ZonedDateTime.now(ketchupZone).month.name.toLowerCase().capitalize()
-                    } ${ZonedDateTime.now(ketchupZone).year}\n\n"
+                        ZonedDateTime.now(ketchupZone).month.name.lowercase(Locale.getDefault())
+                            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                    } ${ZonedDateTime.now(ketchupZone).year}\n\n${openaiSummary}"
                 )
             }
         }
