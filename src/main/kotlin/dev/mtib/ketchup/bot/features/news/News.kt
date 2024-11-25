@@ -81,12 +81,15 @@ object News : Feature {
                             The goal is to provide a summary of the news articles and events in a way that is engaging and informative.
                             Filter out any irrelevant information and focus on the most important details.
                             Remove any advertisments only relevant for tourists.
+                            Group similar events into categories and provide a brief overview of each category if there are multiple events in the same category.
                             
-                            You can also include prompts to do seasonal activities or events common to do in the 2 months following ${
+                            You can also include prompts to do activities or events common to do in the 2 months following ${
                                 ZonedDateTime.now(
                                     ketchupZone
                                 )
-                            }
+                            }.
+                            These other activities could be seasonal things like building gingerbread houses in winter, painting eggs around easter or similar creative activities.
+                            If the normal events don't provide enough inspiration, you can also suggest recurring non-seasonal activities like board game nights, D&D one-shot ideas, movie nights, video games or similar.
                         """.trimIndent()
                         ),
                     ) + data.map {
