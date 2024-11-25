@@ -73,6 +73,7 @@ object Interactions {
         Gpt,
         Help,
         Leave,
+        News,
         NorthernLights,
         Rank,
         ReactionSubscription,
@@ -85,17 +86,16 @@ object Interactions {
         return interactions.asIterable()
     }
 
-    val filteredInteractions: List<Interaction>
-        get() {
-            val regexString = System.getenv(COMMAND_FILTER_ENV)
-            if (regexString != null) {
-                val re = Regex(regexString)
-                return interactions.filter {
-                    it.name.matches(re)
-                }
+    private val filteredInteractions: List<Interaction> by lazy {
+        val regexString = System.getenv(COMMAND_FILTER_ENV)
+        if (regexString != null) {
+            val re = Regex(regexString)
+            return@lazy interactions.filter {
+                it.name.matches(re)
             }
-            return interactions.toList()
         }
+        return@lazy interactions.toList()
+    }
 
     fun ActionInteractionCreateEvent.shouldIgnore(): Boolean {
         return this.interaction.user.isBot || (this.interaction.user.isGod && !ToggleRespondToGod.respondToGod)

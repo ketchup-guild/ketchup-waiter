@@ -19,6 +19,8 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.9")
     implementation("io.github.oshai:kotlin-logging:7.0.0")
 
+    implementation("com.mohamedrejeb.ksoup:ksoup-html:0.4.1")
+
     implementation("dev.kord:kord-core:0.14.0")
 
     val exposedVersion = "0.47.0"
