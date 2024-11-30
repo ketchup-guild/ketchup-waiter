@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import dev.mtib.ketchup.bot.utils.ketchupObjectMapper
 import dev.mtib.ketchup.bot.utils.ketchupZone
 import dev.mtib.ketchup.bot.utils.now
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -58,7 +59,9 @@ class ClientTest : FunSpec({
         test("cache") {
             val leaderboard: Client.Leaderboard = ketchupObjectMapper.readValue(json)
             val cache =
-                Client.Cache(listOf(Client.Cache.CacheItem(ketchupZone.now().toInstant(), leaderboard, "cookie")))
+                Client.Cache.empty().copy(
+                    items = listOf(Client.Cache.CacheItem(ketchupZone.now().toInstant(), leaderboard, "cookie"))
+                )
 
             val ser = ketchupObjectMapper.writeValueAsString(cache)
             val deser = ketchupObjectMapper.readValue<Client.Cache>(ser)
@@ -66,5 +69,12 @@ class ClientTest : FunSpec({
             deser.items.size shouldBe 1
         }
 
+    }
+    context("http") {
+        test("3xx throws redirect") {
+            shouldThrow<Client.RedirectException> {
+                Client.getLeaderboard(2024, 2465123, "")
+            }
+        }
     }
 })

@@ -11,6 +11,7 @@ import dev.mtib.ketchup.bot.interactions.handlers.ReportBenchmark
 import dev.mtib.ketchup.bot.utils.ketchupZone
 import dev.mtib.ketchup.bot.utils.nextClockTime
 import dev.mtib.ketchup.bot.utils.now
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import org.jetbrains.letsPlot.export.ggsave
 import org.jetbrains.letsPlot.geom.geomLine
@@ -29,6 +30,7 @@ import kotlin.time.Duration.Companion.seconds
 object AocPoster : Feature {
     lateinit var kord: Kord
     lateinit var job: Job
+    private val logger = KotlinLogging.logger {}
 
     override fun cancel() {
         super.cancel()
@@ -77,25 +79,19 @@ object AocPoster : Feature {
         val userNames = mutableMapOf<String, String>()
 
         suspend fun Map<String, List<Client.Cache.BenchmarkReport>>.plot(): Path {
-            val data = this.entries.map { (snowflake, data) ->
-                val user = userNames.getOrPut(snowflake) {
-                    channel.kord.getUser(Snowflake(snowflake))!!.asMember(channel.guildId).effectiveName
-                }
-
-                data.map {
-                    mapOf(
-                        "snowflake" to snowflake,
-                        "username" to user,
-                        "report time" to it.timestamp,
-                        "runtime" to it.timeMs
-                    )
-                }
-            }.flatten().let {
-                buildMap {
-                    it.forEach { entry ->
-                        entry.forEach { (key, value) ->
-                            getOrPut(key) { mutableListOf<Any>() }.add(value)
+            val data = buildMap<String, MutableList<Any>> {
+                this@plot.forEach { (snowflake, data) ->
+                    try {
+                        val user = userNames.getOrPut(snowflake) {
+                            channel.kord.getUser(Snowflake(snowflake))!!.asMember(channel.guildId).effectiveName
                         }
+                        getOrPut("snowflake") { mutableListOf() }.addAll(List(data.size) { snowflake })
+                        getOrPut("username") { mutableListOf() }.addAll(List(data.size) { user })
+                        getOrPut("report time") { mutableListOf() }.addAll(data.map { it.timestamp })
+                        getOrPut("runtime") { mutableListOf() }.addAll(data.map { it.timeMs })
+                    } catch (e: Exception) {
+                        // Skip user
+                        logger.error(e) { "Failed to plot benchmark results for $snowflake" }
                     }
                 }
             }

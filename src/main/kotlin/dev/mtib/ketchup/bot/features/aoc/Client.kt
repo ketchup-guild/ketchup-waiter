@@ -26,7 +26,9 @@ object Client {
     private const val CACHE_FILE = "aoc.json"
     private val logger = KotlinLogging.logger {}
 
-    class Cache(
+    private val cachePath by lazy { Path(CACHE_FILE) }
+
+    class Cache private constructor(
         val items: List<CacheItem> = emptyList(),
         val listeners: List<Listener> = emptyList(),
         val benchmarks: List<BenchmarkReport> = emptyList(),
@@ -52,6 +54,22 @@ object Client {
             val timeMs: Double,
             val timestamp: java.time.Instant,
         )
+
+        companion object {
+            fun empty() = Cache()
+
+            fun get() = cachePath.readOrNull<Cache>() ?: empty()
+        }
+
+        fun save() {
+            cachePath.write(this)
+        }
+
+        fun copy(
+            items: List<CacheItem> = this.items,
+            listeners: List<Listener> = this.listeners,
+            benchmarks: List<BenchmarkReport> = this.benchmarks,
+        ) = Cache(items, listeners, benchmarks)
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -83,35 +101,16 @@ object Client {
 
     class RedirectException : Exception("Redirected")
 
-    private fun fetchLoaderboard(year: Int, ownerId: Long, cookie: String): Leaderboard {
-        logger.info { "Fetching leaderboard $ownerId for $year" }
-        val request = okhttp3.Request.Builder()
-            .url("https://adventofcode.com/$year/leaderboard/private/view/$ownerId.json")
-            .header("Cookie", "session=$cookie;")
-            .build()
-        val response = httpClient.newCall(request).execute()
-        if (response.isRedirect) {
-            logger.error { "Failed to fetch leaderboard $ownerId for $year: Redirected" }
-            throw RedirectException()
-        }
-        return ketchupObjectMapper.readValue(response.body!!.string())
-    }
-
-    suspend fun getListeners(): List<Cache.Listener> {
-        cacheMutex.withLock {
-            val cachePath = Path(CACHE_FILE)
-            val cache = cachePath.readOrNull<Cache>() ?: Cache()
-            return cache.listeners
-        }
-    }
+    suspend fun getListeners(): List<Cache.Listener> = cacheMutex.withLock {
+        Cache.get()
+    }.listeners
 
     suspend fun addListener(snowflake: String, event: String, ownerId: Long, cookie: String) {
+        val newListener = Cache.Listener(snowflake, event, ownerId, cookie)
         cacheMutex.withLock {
-            val cachePath = Path(CACHE_FILE)
-            val cache = cachePath.readOrNull<Cache>() ?: Cache()
-            val newCache = Cache(
-                cache.items,
-                cache.listeners + Cache.Listener(snowflake, event, ownerId, cookie)
+            val cache = cachePath.readOrNull<Cache>() ?: Cache.empty()
+            val newCache = cache.copy(
+                listeners = cache.listeners + newListener
             )
             cachePath.write(newCache)
         }
@@ -119,11 +118,9 @@ object Client {
 
     suspend fun removeListener(listener: Cache.Listener) {
         cacheMutex.withLock {
-            val cachePath = Path(CACHE_FILE)
-            val cache = cachePath.readOrNull<Cache>() ?: Cache()
-            val newCache = Cache(
-                cache.items,
-                cache.listeners.filter { it.snowflake != listener.snowflake || it.event != listener.event || it.ownerId != listener.ownerId }
+            val cache = cachePath.readOrNull<Cache>() ?: Cache.empty()
+            val newCache = cache.copy(
+                listeners = cache.listeners.filter { it.snowflake != listener.snowflake || it.event != listener.event || it.ownerId != listener.ownerId }
             )
             cachePath.write(newCache)
         }
@@ -131,11 +128,8 @@ object Client {
 
     suspend fun recordBenchmarkResult(userSnowflake: String, event: String, day: Int, part: Int, timeMs: Double) {
         cacheMutex.withLock {
-            val cachePath = Path(CACHE_FILE)
-            val cache = cachePath.readOrNull<Cache>() ?: Cache()
-            val newCache = Cache(
-                items = cache.items,
-                listeners = cache.listeners,
+            val cache = cachePath.readOrNull<Cache>() ?: Cache.empty()
+            val newCache = cache.copy(
                 benchmarks = cache.benchmarks + Cache.BenchmarkReport(
                     userSnowflake = userSnowflake,
                     event = event,
@@ -154,14 +148,13 @@ object Client {
      */
     suspend fun getBenchmarkResults(): Map<String, Map<Int, Map<Int, Map<String, List<Cache.BenchmarkReport>>>>> {
         return cacheMutex.withLock {
-            val cachePath = Path(CACHE_FILE)
-            cachePath.readOrNull<Cache>() ?: Cache()
+            cachePath.readOrNull<Cache>() ?: Cache.empty()
         }.let { cache ->
-            cache.benchmarks.groupBy { it.event }.mapValues {
-                it.value.groupBy { it.day }.mapValues {
-                    it.value.groupBy { it.part }.mapValues {
-                        it.value.groupBy { it.userSnowflake }.mapValues {
-                            it.value.sortedBy { it.timestamp }
+            cache.benchmarks.groupBy { it.event }.mapValues { (_, byEvent) ->
+                byEvent.groupBy { it.day }.mapValues { (_, byDay) ->
+                    byDay.groupBy { it.part }.mapValues { (_, byPart) ->
+                        byPart.groupBy { it.userSnowflake }.mapValues { (_, byUser) ->
+                            byUser.sortedBy { it.timestamp }
                         }
                     }
                 }
@@ -169,10 +162,23 @@ object Client {
         }
     }
 
+    private fun fetchLoaderboard(year: Int, ownerId: Long, cookie: String): Leaderboard {
+        logger.info { "Fetching leaderboard $ownerId for $year" }
+        val request = okhttp3.Request.Builder()
+            .url("https://adventofcode.com/$year/leaderboard/private/view/$ownerId.json")
+            .header("Cookie", "session=$cookie;")
+            .build()
+        val response = httpClient.newCall(request).execute()
+        if (response.isRedirect) {
+            logger.error { "Failed to fetch leaderboard $ownerId for $year: Redirected" }
+            throw RedirectException()
+        }
+        return ketchupObjectMapper.readValue(response.body!!.string())
+    }
+
     suspend fun getLeaderboard(year: Int, ownerId: Long, cookie: String): Leaderboard {
         cacheMutex.withLock {
-            val cachePath = Path(CACHE_FILE)
-            val cache = cachePath.readOrNull<Cache>() ?: Cache()
+            val cache = cachePath.readOrNull<Cache>() ?: Cache.empty()
             cache.items.find { it.data.event == year.toString() && it.data.ownerId == ownerId }?.let { item ->
                 if (item.timestamp.toKotlinInstant().plus(MAX_AGE_SECONDS.seconds) > Clock.System.now()) {
                     logger.debug { "Cache hit for $ownerId $year (very fresh)" }
@@ -187,11 +193,13 @@ object Client {
             logger.debug { "Cache miss for $ownerId $year" }
             val item = fetchLoaderboard(year, ownerId, cookie).also { item ->
                 val newCache =
-                    Cache(cache.items.filter { it.data.event != year.toString() && it.data.ownerId != ownerId } + Cache.CacheItem(
-                        Clock.System.now().toJavaInstant(),
-                        item,
-                        cookie
-                    ))
+                    cache.copy(
+                        items = cache.items.filter { it.data.event != year.toString() && it.data.ownerId != ownerId } + Cache.CacheItem(
+                            Clock.System.now().toJavaInstant(),
+                            item,
+                            cookie
+                        )
+                    )
                 cachePath.write(newCache)
             }
 
