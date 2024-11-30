@@ -15,6 +15,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import org.jetbrains.letsPlot.export.ggsave
 import org.jetbrains.letsPlot.geom.geomLine
+import org.jetbrains.letsPlot.geom.geomPoint
 import org.jetbrains.letsPlot.ggsize
 import org.jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.letsPlot.label.labs
@@ -71,10 +72,10 @@ object AocPoster : Feature {
         }
     }
 
-    suspend fun post(channel: TextChannel, eventData: Client.Leaderboard) {
+    suspend fun post(channel: TextChannel, eventData: Client.Leaderboard, day: Int = ketchupZone.now().dayOfMonth) {
         val benchmarkResults = Client.getBenchmarkResults()[eventData.event]
-        val yesterdaysBenchmarkResults = benchmarkResults?.get(ketchupZone.now().minusDays(1).dayOfMonth)
-        val todaysBenchmarkResults = benchmarkResults?.get(ketchupZone.now().dayOfMonth)
+        val yesterdaysBenchmarkResults = benchmarkResults?.get(day - 1)
+        val todaysBenchmarkResults = benchmarkResults?.get(day)
 
         val userNames = mutableMapOf<String, String>()
 
@@ -105,6 +106,10 @@ object AocPoster : Feature {
             val lighter = "#323337"
 
             return (letsPlot(data) + geomLine {
+                x = "report time"
+                y = "runtime"
+                color = "username"
+            } + geomPoint {
                 x = "report time"
                 y = "runtime"
                 color = "username"
@@ -152,7 +157,6 @@ object AocPoster : Feature {
         channel.createMessage {
             content = buildString {
                 appendLine("# Advent of Code ${eventData.event} leaderboard\n")
-                val day = ketchupZone.now().dayOfMonth
                 if (day <= 25) {
                     appendLine("## Day $day")
                 }
@@ -175,35 +179,35 @@ object AocPoster : Feature {
                 appendLine("Report your benchmark results with `/${ReportBenchmark.name} <day> <part> <time in ms>` (averaging many runs, reading input from memory & JIT warmup allowed)!")
 
                 if (yesterdaysBenchmarkResults?.get(1) != null || yesterdaysBenchmarkResults?.get(2) != null) {
-                    appendLine("## Benchmark results from yesterday")
+                    appendLine("## Benchmark results from yesterday (Day ${day - 1})")
 
                     yesterdaysBenchmarkResults[1]?.let {
                         appendLine("### Part 1")
-                        appendLine(it.toDiscordMarkdown())
+                        append(it.toDiscordMarkdown())
                     }
 
                     yesterdaysBenchmarkResults[2]?.let {
                         appendLine("### Part 2")
-                        appendLine(it.toDiscordMarkdown())
+                        append(it.toDiscordMarkdown())
                     }
                 }
 
                 if (todaysBenchmarkResults?.get(1) != null || todaysBenchmarkResults?.get(2) != null) {
-                    appendLine("\n## Benchmark results from today")
+                    appendLine("## Benchmark results from today (Day $day)")
 
                     todaysBenchmarkResults[1]?.let {
                         appendLine("### Part 1")
-                        appendLine(it.toDiscordMarkdown())
+                        append(it.toDiscordMarkdown())
                     }
 
                     todaysBenchmarkResults[2]?.let {
                         appendLine("### Part 2")
-                        appendLine(it.toDiscordMarkdown())
+                        append(it.toDiscordMarkdown())
                     }
                 }
 
                 if (day != 26) {
-                    appendLine("\nSee you tomorrow!")
+                    appendLine("See you tomorrow! 👋")
                 }
             }
             listOfNotNull(
