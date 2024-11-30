@@ -108,38 +108,40 @@ object Client {
     suspend fun addListener(snowflake: String, event: String, ownerId: Long, cookie: String) {
         val newListener = Cache.Listener(snowflake, event, ownerId, cookie)
         cacheMutex.withLock {
-            val cache = cachePath.readOrNull<Cache>() ?: Cache.empty()
-            val newCache = cache.copy(
-                listeners = cache.listeners + newListener
-            )
-            cachePath.write(newCache)
+            Cache.get().run {
+                copy(
+                    listeners = listeners.filter {
+                        it.snowflake != newListener.snowflake || it.event != newListener.event || it.ownerId != newListener.ownerId
+                    } + newListener
+                )
+            }.save()
         }
     }
 
     suspend fun removeListener(listener: Cache.Listener) {
         cacheMutex.withLock {
-            val cache = cachePath.readOrNull<Cache>() ?: Cache.empty()
-            val newCache = cache.copy(
-                listeners = cache.listeners.filter { it.snowflake != listener.snowflake || it.event != listener.event || it.ownerId != listener.ownerId }
-            )
-            cachePath.write(newCache)
+            Cache.get().run {
+                copy(
+                    listeners = listeners.filter { it.snowflake != listener.snowflake || it.event != listener.event || it.ownerId != listener.ownerId }
+                )
+            }.save()
         }
     }
 
     suspend fun recordBenchmarkResult(userSnowflake: String, event: String, day: Int, part: Int, timeMs: Double) {
         cacheMutex.withLock {
-            val cache = cachePath.readOrNull<Cache>() ?: Cache.empty()
-            val newCache = cache.copy(
-                benchmarks = cache.benchmarks + Cache.BenchmarkReport(
-                    userSnowflake = userSnowflake,
-                    event = event,
-                    day = day,
-                    part = part,
-                    timeMs = timeMs,
-                    timestamp = Clock.System.now().toJavaInstant()
+            Cache.get().run {
+                copy(
+                    benchmarks = benchmarks + Cache.BenchmarkReport(
+                        userSnowflake = userSnowflake,
+                        event = event,
+                        day = day,
+                        part = part,
+                        timeMs = timeMs,
+                        timestamp = Clock.System.now().toJavaInstant()
+                    )
                 )
-            )
-            cachePath.write(newCache)
+            }.save()
         }
     }
 
@@ -148,7 +150,7 @@ object Client {
      */
     suspend fun getBenchmarkResults(): Map<String, Map<Int, Map<Int, Map<String, List<Cache.BenchmarkReport>>>>> {
         return cacheMutex.withLock {
-            cachePath.readOrNull<Cache>() ?: Cache.empty()
+            Cache.get()
         }.let { cache ->
             cache.benchmarks.groupBy { it.event }.mapValues { (_, byEvent) ->
                 byEvent.groupBy { it.day }.mapValues { (_, byDay) ->
@@ -178,7 +180,7 @@ object Client {
 
     suspend fun getLeaderboard(year: Int, ownerId: Long, cookie: String): Leaderboard {
         cacheMutex.withLock {
-            val cache = cachePath.readOrNull<Cache>() ?: Cache.empty()
+            val cache = Cache.get()
             cache.items.find { it.data.event == year.toString() && it.data.ownerId == ownerId }?.let { item ->
                 if (item.timestamp.toKotlinInstant().plus(MAX_AGE_SECONDS.seconds) > Clock.System.now()) {
                     logger.debug { "Cache hit for $ownerId $year (very fresh)" }
@@ -192,15 +194,13 @@ object Client {
             }
             logger.debug { "Cache miss for $ownerId $year" }
             val item = fetchLoaderboard(year, ownerId, cookie).also { item ->
-                val newCache =
-                    cache.copy(
-                        items = cache.items.filter { it.data.event != year.toString() && it.data.ownerId != ownerId } + Cache.CacheItem(
-                            Clock.System.now().toJavaInstant(),
-                            item,
-                            cookie
-                        )
+                cache.copy(
+                    items = cache.items.filter { it.data.event != year.toString() && it.data.ownerId != ownerId } + Cache.CacheItem(
+                        Clock.System.now().toJavaInstant(),
+                        item,
+                        cookie
                     )
-                cachePath.write(newCache)
+                ).save()
             }
 
             return item
