@@ -21,9 +21,15 @@ object RegisterAdventOfCode : Interaction {
 
     override suspend fun build(it: GlobalChatInputCreateBuilder) {
         super.build(it)
-        it.integer("year", "The year of the Advent of Code event")
-        it.integer("leaderboard", "The owner ID of the Advent of Code leaderboard")
-        it.string("cookie", "The cookie to access the Advent of Code leaderboard")
+        it.integer("year", "The year of the Advent of Code event") {
+            required = true
+        }
+        it.integer("leaderboard", "The owner ID of the Advent of Code leaderboard") {
+            required = true
+        }
+        it.string("cookie", "The cookie to access the Advent of Code leaderboard") {
+            required = true
+        }
     }
 
     override suspend fun handleInteraction(event: ActionInteractionCreateEvent, kord: Kord) {

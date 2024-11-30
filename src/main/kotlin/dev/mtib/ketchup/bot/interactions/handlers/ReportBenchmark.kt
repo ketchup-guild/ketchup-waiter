@@ -30,16 +30,19 @@ object ReportBenchmark : Interaction {
     override suspend fun build(it: GlobalChatInputCreateBuilder) {
         super.build(it)
         it.integer(DAY_VAR, "The day of the benchmark") {
+            required = true
             Locale.ALL.forEach { locale ->
                 this.name(locale, "day")
             }
         }
         it.integer(PART_VAR, "The part of the benchmark") {
+            required = true
             Locale.ALL.forEach { locale ->
                 this.name(locale, "part")
             }
         }
         it.number(TIME_MS_VAR, "The time of the benchmark in milliseconds") {
+            required = true
             Locale.ALL.forEach { locale ->
                 this.name(locale, "time_milliseconds")
             }
