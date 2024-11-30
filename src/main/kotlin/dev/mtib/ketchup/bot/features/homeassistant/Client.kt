@@ -169,8 +169,3 @@ object Client {
         }
     }
 }
-
-suspend fun main(): Unit {
-    println(Client.allowedColors)
-    println(Client.allowedColors.size)
-}

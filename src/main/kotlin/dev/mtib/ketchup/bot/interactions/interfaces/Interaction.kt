@@ -100,6 +100,16 @@ interface Interaction {
             }
         }
 
+        fun ActionInteraction.getLongOptionByName(name: String): Long? {
+            return when (val value = getOptionByNameOrNull<Any>(name)) {
+                is Long -> value
+                is String -> value.toLong()
+                is Int -> value.toLong()
+                is Double -> value.toLong()
+                else -> null
+            }
+        }
+
         fun ActionInteraction.getBooleanOptionByName(name: String): Boolean? {
             return getOptionByNameOrNull(name)
         }

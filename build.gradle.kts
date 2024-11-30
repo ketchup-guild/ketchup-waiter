@@ -33,7 +33,11 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
 
     implementation("org.xerial:sqlite-jdbc:3.45.1.0")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.+")
+
+    val jacksonVersion = "2.18.2"
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+
 
     implementation(platform("com.aallam.openai:openai-client-bom:3.8.2"))
     implementation("com.aallam.openai:openai-client")
@@ -44,7 +48,19 @@ dependencies {
     implementation("io.arrow-kt:arrow-core:1.2.4")
     implementation("io.arrow-kt:arrow-fx-coroutines:1.2.4")
 
+    // Lets-Plot Kotlin API
+    implementation("org.jetbrains.lets-plot:lets-plot-kotlin-jvm:4.9.2")
+    // Lets-Plot Multiplatform (Batik rendering)
+    implementation("org.jetbrains.lets-plot:lets-plot-batik:4.5.1")
+    runtimeOnly("org.jetbrains.lets-plot:lets-plot-image-export:4.5.1")
+
+
     testImplementation(kotlin("test"))
+
+    val kotestVersion = "5.9.0"
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+    testImplementation("io.kotest:kotest-property:$kotestVersion")
 }
 
 tasks.test {

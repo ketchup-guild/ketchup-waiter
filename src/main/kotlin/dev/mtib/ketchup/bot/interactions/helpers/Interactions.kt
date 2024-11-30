@@ -77,6 +77,8 @@ object Interactions {
         NorthernLights,
         Rank,
         ReactionSubscription,
+        RegisterAdventOfCode,
+        ReportBenchmark,
         ScheduleEventChannel,
         ScheduleMessage,
         ToggleRespondToGod,
