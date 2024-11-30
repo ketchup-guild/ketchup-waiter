@@ -77,7 +77,7 @@ object Client {
         @JsonIgnore
         fun isCurrent(): Boolean {
             val now = OffsetDateTime.now(ketchupZone)!!
-            return now.year.toString() == event && now.dayOfMonth < 26 && now.monthValue == 12
+            return now.year.toString() == event && now.dayOfMonth <= 26 && now.monthValue == 12
         }
     }
 
