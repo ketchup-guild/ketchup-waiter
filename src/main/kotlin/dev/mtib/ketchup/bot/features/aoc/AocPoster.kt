@@ -156,6 +156,18 @@ object AocPoster : Feature {
         channel.createMessage {
             content = buildString {
                 appendLine("# Advent of Code ${eventData.event} leaderboard\n")
+                val day = ketchupZone.now().dayOfMonth
+                if (day <= 25) {
+                    appendLine("## Day $day")
+                }
+                when (day) {
+                    6 -> appendLine("Happy Saint Nikolaus'!")
+                    24 -> appendLine("Merry Christmas eve!")
+                    25 -> appendLine("Merry Christmas day!")
+                    26 -> appendLine("Thank you all for participating in this year's Advent of Code! 🎉 Here's the last report.")
+                }
+
+                appendLine("\nhttps://adventofcode.com/${eventData.event}/leaderboard/private/view/${eventData.ownerId}")
 
                 val leaderboard =
                     eventData.members.values.sortedWith(compareBy({ -it.stars }, { it.lastStarTs }))
@@ -193,6 +205,10 @@ object AocPoster : Feature {
                         appendLine(it.toDiscordMarkdown())
                     }
                 }
+
+                if (day != 26) {
+                    appendLine("\nSee you tomorrow!")
+                }
             }
             listOfNotNull(
                 yesterdaysBenchmarkResults?.get(1)?.plot(),
@@ -200,9 +216,6 @@ object AocPoster : Feature {
                 todaysBenchmarkResults?.get(1)?.plot(),
                 todaysBenchmarkResults?.get(2)?.plot(),
             ).also { delay(500.milliseconds) }.forEach {
-                addFile(it)
-                addFile(it)
-                addFile(it)
                 addFile(it)
                 CoroutineScope(Dispatchers.Default).launch {
                     delay(20.seconds)
