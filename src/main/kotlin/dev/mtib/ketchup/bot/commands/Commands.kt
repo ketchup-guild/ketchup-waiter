@@ -12,6 +12,7 @@ import org.koin.dsl.module as koinModule
 
 class Commands {
     companion object {
+        // TODO remove coin, do this with Reflection
         val module = koinModule {
             single { DiceCommand() } bind Command::class
             single { HelpCommand } bind Command::class
@@ -31,6 +32,7 @@ class Commands {
             single { ScheduleMessageCommand } bind Command::class
             single { ScheduledMessageStatsCommand } binds arrayOf(Command::class, AdminCommand::class)
             single { ReactionSubscriptionCommand } bind Command::class
+            single { AocNowCommand } bind Command::class
         }
     }
 }

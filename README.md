@@ -85,5 +85,4 @@ docker push mtibbecker/ketchup-bot:latest
 ```bash
 ./gradlew fatjar
 scp build/libs/ketchup-bot-fatjar.jar root@mtib.dev:containers/ketchup-waiter/ketchup-bot-fatjar.jar 
-# ssh root@mtib.dev; tmux at -t ketchup-bot; ^C; cd containers/ketchup-waiter; ./start.sh
 ```

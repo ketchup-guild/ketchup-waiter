@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "2.0.20"
-    kotlin("plugin.serialization") version "2.0.20"
+    kotlin("jvm") version "2.1.0"
+    kotlin("plugin.serialization") version "2.1.0"
 }
 
 group = "dev.mtib"
@@ -52,9 +52,10 @@ dependencies {
 
     // Lets-Plot Kotlin API
     implementation("org.jetbrains.lets-plot:lets-plot-kotlin-jvm:4.9.2")
-    // Lets-Plot Multiplatform (Batik rendering)
-    implementation("org.jetbrains.lets-plot:lets-plot-batik:4.5.1")
+    implementation("org.jetbrains.lets-plot:lets-plot-jfx:2.0.2")
     runtimeOnly("org.jetbrains.lets-plot:lets-plot-image-export:4.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.11.0")
+
 
 
     testImplementation(kotlin("test"))
@@ -84,5 +85,5 @@ tasks.create("fatjar", Jar::class) {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(23)
 }
