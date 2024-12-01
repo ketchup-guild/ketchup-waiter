@@ -6,6 +6,7 @@ import dev.kord.gateway.Intents
 import dev.kord.gateway.PrivilegedIntent
 import dev.mtib.ketchup.bot.commands.Command
 import dev.mtib.ketchup.bot.features.Feature
+import dev.mtib.ketchup.bot.features.aoc.AocPoster
 import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRank
 import dev.mtib.ketchup.bot.features.news.News
 import dev.mtib.ketchup.bot.features.northernlights.NorthernLightsDigest
@@ -36,7 +37,14 @@ class KetchupBot(private val token: KetchupBotToken) {
 
         Interactions.register(kord)
 
-        val features = listOf<Feature>(KetchupRank(), Scheduler, NorthernLightsDigest, Planner, News).onEach {
+        val features = listOf<Feature>(
+            KetchupRank(),
+            Scheduler,
+            NorthernLightsDigest,
+            Planner,
+            News,
+            AocPoster,
+        ).onEach {
             logger.info { "Registering feature ${it::class.simpleName}" }
             it.register(kord)
         }

@@ -1,5 +1,6 @@
 package dev.mtib.ketchup.bot.features.aoc
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -28,43 +29,63 @@ object Client {
 
     private val cachePath by lazy { Path(CACHE_FILE) }
 
-    class Cache private constructor(
+    class Cache @JsonCreator private constructor(
+        @JsonProperty("items")
         val items: List<CacheItem> = emptyList(),
+        @JsonProperty("listeners")
         val listeners: List<Listener> = emptyList(),
+        @JsonProperty("benchmarks")
         val benchmarks: List<BenchmarkReport> = emptyList(),
     ) {
         class CacheItem(
+            @JsonProperty("timestamp")
             val timestamp: java.time.Instant,
+            @JsonProperty("data")
             val data: Leaderboard,
+            @JsonProperty("cookie")
             val cookie: String,
         )
 
         data class Listener(
+            @JsonProperty("snowflake")
             val snowflake: String,
+            @JsonProperty("event")
             val event: String,
+            @JsonProperty("owner_id")
             val ownerId: Long,
+            @JsonProperty("cookie")
             val cookie: String,
         )
 
         class BenchmarkReport(
+            @JsonProperty("user_snowflake")
             val userSnowflake: String,
+            @JsonProperty("event")
             val event: String,
+            @JsonProperty("day")
             val day: Int,
+            @JsonProperty("part")
             val part: Int,
+            @JsonProperty("time_ms")
             val timeMs: Double,
+            @JsonProperty("timestamp")
             val timestamp: java.time.Instant,
         )
 
         companion object {
+            @JsonIgnore
             fun empty() = Cache()
 
+            @JsonIgnore
             fun get() = cachePath.readOrNull<Cache>() ?: empty()
         }
 
+        @JsonIgnore
         fun save() {
             cachePath.write(this)
         }
 
+        @JsonIgnore
         fun copy(
             items: List<CacheItem> = this.items,
             listeners: List<Listener> = this.listeners,
@@ -74,21 +95,26 @@ object Client {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     class Leaderboard(
+        @JsonProperty("event")
         val event: String,
         @JsonProperty("owner_id")
         val ownerId: Long,
+        @JsonProperty("members")
         val members: Map<String, Member>
     ) {
         @JsonIgnoreProperties(ignoreUnknown = true)
         class Member(
             @JsonProperty("local_score")
             val localScore: Int,
+            @JsonProperty("name")
             val name: String,
+            @JsonProperty("id")
             val id: Long,
             @JsonProperty("last_star_ts")
             val lastStarTs: Long,
             @JsonProperty("global_score")
             val globalScore: Int,
+            @JsonProperty("stars")
             val stars: Int,
         )
 

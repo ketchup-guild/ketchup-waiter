@@ -23,6 +23,7 @@ import org.jetbrains.letsPlot.letsPlot
 import org.jetbrains.letsPlot.scale.scaleXDateTime
 import org.jetbrains.letsPlot.themes.*
 import java.nio.file.Path
+import java.util.*
 import kotlin.io.path.Path
 import kotlin.io.path.deleteExisting
 import kotlin.time.Duration.Companion.milliseconds
@@ -88,7 +89,12 @@ object AocPoster : Feature {
                         }
                         getOrPut("snowflake") { mutableListOf() }.addAll(List(data.size) { snowflake })
                         getOrPut("username") { mutableListOf() }.addAll(List(data.size) { user })
-                        getOrPut("report time") { mutableListOf() }.addAll(data.map { it.timestamp })
+                        getOrPut("report time") { mutableListOf() }.addAll(data.map {
+                            it.timestamp.plusMillis(
+                                TimeZone.getTimeZone("Europe/Copenhagen").getOffset(it.timestamp.toEpochMilli())
+                                    .toLong()
+                            )
+                        })
                         getOrPut("runtime") { mutableListOf() }.addAll(data.map { it.timeMs })
                     } catch (e: Exception) {
                         // Skip user

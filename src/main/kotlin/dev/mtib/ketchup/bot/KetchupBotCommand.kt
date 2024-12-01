@@ -39,7 +39,7 @@ suspend fun main() {
     }.koin
 
 
-    logger.info(koin.get<BotAuthorizationUrl>().url)
+    logger.info { koin.get<BotAuthorizationUrl>().url }
 
     koin.get<KetchupBot>().start()
 }

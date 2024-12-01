@@ -35,6 +35,8 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:3.45.1.0")
 
     val jacksonVersion = "2.18.2"
+    implementation("com.fasterxml.jackson:jackson-bom:$jacksonVersion")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
 
@@ -82,5 +84,5 @@ tasks.create("fatjar", Jar::class) {
 }
 
 kotlin {
-    jvmToolchain(8)
+    jvmToolchain(21)
 }

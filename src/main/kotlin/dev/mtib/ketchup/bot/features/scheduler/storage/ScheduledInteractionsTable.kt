@@ -55,7 +55,7 @@ object ScheduledInteractionsTable : LongIdTable("scheduled_interactions") {
         .selectAll()
         .where {
             (sent eq false)
-                .and(time lessEq timestampLiteral(Instant.now()))
+                .and(time.lessEq(timestampLiteral(Instant.now()).castTo(time.columnType)))
         }
         .mapLazy { row ->
             ScheduledInteraction.fromResultRow(row)
