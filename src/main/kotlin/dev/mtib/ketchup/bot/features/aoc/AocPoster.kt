@@ -20,10 +20,8 @@ import org.jetbrains.letsPlot.ggsize
 import org.jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.letsPlot.label.labs
 import org.jetbrains.letsPlot.letsPlot
-import org.jetbrains.letsPlot.scale.scaleXDateTime
 import org.jetbrains.letsPlot.themes.*
 import java.nio.file.Path
-import java.util.*
 import kotlin.io.path.Path
 import kotlin.io.path.deleteExisting
 import kotlin.time.Duration.Companion.milliseconds
@@ -82,23 +80,23 @@ object AocPoster : Feature {
 
         suspend fun Map<String, List<Client.Cache.BenchmarkReport>>.plot(): Path {
             val data = buildMap<String, MutableList<Any>> {
-                this@plot.forEach { (snowflake, data) ->
+                this@plot.values.flatten().sortedWith(compareBy { it.timestamp }).forEach { data ->
                     try {
-                        val user = userNames.getOrPut(snowflake) {
-                            channel.kord.getUser(Snowflake(snowflake))!!.asMember(channel.guildId).effectiveName
+                        val user = userNames.getOrPut(data.userSnowflake) {
+                            channel.kord.getUser(Snowflake(data.userSnowflake))!!
+                                .asMember(channel.guildId).effectiveName
                         }
-                        getOrPut("snowflake") { mutableListOf() }.addAll(List(data.size) { snowflake })
-                        getOrPut("username") { mutableListOf() }.addAll(List(data.size) { user })
-                        getOrPut("report time") { mutableListOf() }.addAll(data.map {
-                            it.timestamp.plusMillis(
-                                TimeZone.getTimeZone("Europe/Copenhagen").getOffset(it.timestamp.toEpochMilli())
-                                    .toLong()
+                        getOrPut("snowflake") { mutableListOf() }.add(data.userSnowflake)
+                        getOrPut("username") { mutableListOf() }.add(user)
+                        getOrPut("report time") { mutableListOf() }.add(
+                            data.timestamp.atZone(ketchupZone).format(
+                                java.time.format.DateTimeFormatter.ofPattern("dd. HH:mm")
                             )
-                        })
-                        getOrPut("runtime") { mutableListOf() }.addAll(data.map { it.timeMs })
+                        )
+                        getOrPut("runtime") { mutableListOf() }.add(data.timeMs)
                     } catch (e: Exception) {
                         // Skip user
-                        logger.error(e) { "Failed to plot benchmark results for $snowflake" }
+                        logger.error(e) { "Failed to plot benchmark results for ${data.userSnowflake}" }
                     }
                 }
             }
@@ -126,8 +124,6 @@ object AocPoster : Feature {
                 y = "Runtime [ms]",
                 caption = "",
                 color = "Elf",
-            ) + scaleXDateTime(
-                format = "%e. %b %H:%M",
             ) + ggsize(
                 width = 800,
                 height = 600,
