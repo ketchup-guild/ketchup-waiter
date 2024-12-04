@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.mtib.ketchup.bot.utils.ketchupObjectMapper
 import dev.mtib.ketchup.bot.utils.ketchupZone
+import dev.mtib.ketchup.common.RedisClient
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -15,7 +17,8 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.toJavaInstant
 import kotlinx.datetime.toKotlinInstant
 import okhttp3.OkHttpClient
-import redis.clients.jedis.JedisPooled
+import org.json.JSONArray
+import redis.clients.jedis.json.Path2
 import java.time.OffsetDateTime
 import kotlin.time.Duration.Companion.seconds
 
@@ -27,11 +30,6 @@ object Client {
 
     private val redisCache by lazy {
         System.getenv("REDIS_AOC_CACHE") ?: error("Missing REDIS_AOC_CACHE, like 'aoc:ketchup:cache'")
-    }
-
-    private val redisClient by lazy {
-        val redisUrl = System.getenv("REDIS_URL") ?: error("Missing REDIS_URL, like 'redis://localhost:6379'")
-        JedisPooled(redisUrl)
     }
 
     class Cache @JsonCreator private constructor(
@@ -83,15 +81,28 @@ object Client {
 
             @JsonIgnore
             fun get(): Cache = run {
-                redisClient.jsonGet(redisCache)?.let {
+                RedisClient.pool.jsonGet(redisCache)?.let {
                     ketchupObjectMapper.convertValue(it)
                 } ?: empty()
+            }
+
+            private val tr = object : TypeReference<List<BenchmarkReport>>() {}
+
+            @JsonIgnore
+            fun getByUserSnowflake(snowflake: String): List<BenchmarkReport> {
+                return RedisClient.pool.jsonGet(redisCache, Path2("$.benchmarks[?(@.user_snowflake == '$snowflake')]"))
+                    ?.let {
+                        if (it !is JSONArray) {
+                            error("Expected JSONArray, got ${it::class.simpleName}")
+                        }
+                        ketchupObjectMapper.convertValue(it.toList(), tr)
+                    } ?: emptyList()
             }
         }
 
         @JsonIgnore
         fun save() {
-            redisClient.jsonSet(redisCache, ketchupObjectMapper.writeValueAsString(this))
+            RedisClient.pool.jsonSet(redisCache, ketchupObjectMapper.writeValueAsString(this))
         }
 
         @JsonIgnore

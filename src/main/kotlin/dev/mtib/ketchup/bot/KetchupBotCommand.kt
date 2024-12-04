@@ -4,7 +4,11 @@ import dev.mtib.ketchup.bot.commands.Commands
 import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.getEnv
+import dev.mtib.ketchup.server.Server
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import java.util.*
@@ -41,5 +45,12 @@ suspend fun main() {
 
     logger.info { koin.get<BotAuthorizationUrl>().url }
 
-    koin.get<KetchupBot>().start()
+    withContext(Dispatchers.IO) {
+        launch {
+            koin.get<KetchupBot>().start()
+        }
+        launch {
+            Server.start()
+        }
+    }
 }
