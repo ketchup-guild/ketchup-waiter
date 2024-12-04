@@ -1,5 +1,9 @@
 package dev.mtib.ketchup.bot.features.aoc
 
+import com.aallam.openai.api.chat.ChatCompletionRequest
+import com.aallam.openai.api.chat.ChatMessage
+import com.aallam.openai.api.model.ModelId
+import dev.kord.common.entity.ArchiveDuration
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
 import dev.kord.core.behavior.channel.asChannelOfOrNull
@@ -8,8 +12,9 @@ import dev.kord.core.entity.channel.TextChannel
 import dev.kord.rest.builder.message.addFile
 import dev.mtib.ketchup.bot.features.Feature
 import dev.mtib.ketchup.bot.interactions.handlers.ReportBenchmark
+import dev.mtib.ketchup.bot.storage.Storage
 import dev.mtib.ketchup.bot.utils.ketchupZone
-import dev.mtib.ketchup.bot.utils.nextClockTime
+import dev.mtib.ketchup.bot.utils.launchAtClockTime
 import dev.mtib.ketchup.bot.utils.now
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
@@ -24,6 +29,7 @@ import org.jetbrains.letsPlot.themes.*
 import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.deleteExisting
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -41,16 +47,16 @@ object AocPoster : Feature {
         this.kord = kord
 
         job = CoroutineScope(Dispatchers.Default).launch {
-            while (isActive) {
-                val nextRun = ketchupZone.now().nextClockTime(20)
-                val sleepSeconds = (nextRun.toEpochSecond() - ketchupZone.now().toEpochSecond()).seconds
-                delay(sleepSeconds)
-                handleListeners()
+            launchAtClockTime(ketchupZone, 20) {
+                handlePostListeners()
+            }
+            launchAtClockTime(ketchupZone, 5, 50) {
+                handleThreadListeners()
             }
         }
     }
 
-    suspend fun handleListeners() {
+    suspend fun handlePostListeners() {
         Client.getListeners().forEach { listener ->
             try {
                 val eventData = Client.getLeaderboard(listener.event.toInt(), listener.ownerId, listener.cookie)
@@ -67,6 +73,54 @@ object AocPoster : Feature {
                         "The cookie for the Advent of Code ${listener.event} leaderboard is invalid. To continue receiving updates, set up the AoC cookie again."
                 }
                 Client.removeListener(listener)
+            }
+        }
+    }
+
+    suspend fun handleThreadListeners() {
+        Client.getListeners().forEach { listener ->
+            if (listener.event.toInt() != ketchupZone.now().year) return@forEach
+            try {
+                val channel = kord.getChannelOf<TextChannel>(Snowflake(listener.snowflake)) ?: run {
+                    Client.removeListener(listener)
+                    return@forEach
+                }
+                createDailyThread(channel)
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to create daily thread for listener $listener" }
+            }
+        }
+    }
+
+    suspend fun createDailyThread(channel: TextChannel, day: Int = ketchupZone.now().dayOfMonth) {
+        channel.startPublicThread("Day $day") {
+            autoArchiveDuration = ArchiveDuration.from(3.days)
+        }.let {
+            Storage().withOpenAi { openAi, textModel, imageModel ->
+                openAi.chatCompletion(
+                    ChatCompletionRequest(
+                        model = ModelId(textModel.value),
+                        messages = listOf(
+                            ChatMessage.System(
+                                """
+                                    You are a discord bot welcoming participants in a daily thread for the Advent of Code.
+                                    You are posting a greeting message in the thread at 5:50 AM for the advent of code day $day about to release at 6 AM.
+                                    
+                                    Motivate members to participate in the daily thread and share their progress.
+                                    End the message with either a bit of trivia about the day ($day of December), a fun fact about advent of code or a joke.
+                                    
+                                    Remind them to use `/${ReportBenchmark.name} <day> <part> <time in ms>` to report their benchmark results.
+                                """.trimIndent()
+                            ),
+                            ChatMessage.User("Generate the daily greeting message for the $day of December thread.")
+                        ),
+                        n = 1,
+                    )
+                ).choices.firstOrNull()?.message?.content.let { message ->
+                    it.createMessage {
+                        content = message ?: "Good morning! ☀️\nHave fun solving day $day."
+                    }
+                }
             }
         }
     }
