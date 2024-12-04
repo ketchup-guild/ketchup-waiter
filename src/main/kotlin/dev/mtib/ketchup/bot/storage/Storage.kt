@@ -3,6 +3,7 @@ package dev.mtib.ketchup.bot.storage
 import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAI
+import com.aallam.openai.client.OpenAIConfig
 import dev.kord.common.entity.Snowflake
 import dev.mtib.ketchup.bot.utils.getAnywhere
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -155,7 +156,20 @@ class Storage {
 
     inline fun <T> withOpenAi(block: (openAi: OpenAI, textModel: TextModel, imageModel: ImageModel) -> T): T {
         val openAiData = getStorageData().openai
-        return OpenAI(openAiData.apiKey, logging = LoggingConfig(logLevel = LogLevel.None)).use { openAi ->
+        return OpenAI(
+            config = OpenAIConfig(
+                token = openAiData.apiKey,
+                logging = LoggingConfig(logLevel = LogLevel.None),
+                /*
+                                engine = OkHttpEngine(OkHttpConfig().apply {
+                                    ContentNegotiation.let {
+                                        println(it)
+                                    }
+                                    preconfigured = OkHttpClient().newBuilder().build()
+                                }),
+                */
+            )
+        ).use { openAi ->
             block(openAi, TextModel(openAiData.textModel), ImageModel(openAiData.imageModel))
         }
     }

@@ -18,6 +18,7 @@ import dev.mtib.ketchup.bot.utils.launchAtClockTime
 import dev.mtib.ketchup.bot.utils.now
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
 import org.jetbrains.letsPlot.export.ggsave
 import org.jetbrains.letsPlot.geom.geomLine
 import org.jetbrains.letsPlot.geom.geomPoint
@@ -26,6 +27,7 @@ import org.jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.letsPlot.label.labs
 import org.jetbrains.letsPlot.letsPlot
 import org.jetbrains.letsPlot.themes.*
+import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.deleteExisting
@@ -115,7 +117,7 @@ object AocPoster : Feature {
                             ChatMessage.User("Generate the daily greeting message for the $day of December thread.")
                         ),
                         n = 1,
-                    )
+                    ),
                 ).choices.firstOrNull()?.message?.content.let { message ->
                     it.createMessage {
                         content = message ?: "Good morning! ☀️\nHave fun solving day $day."
@@ -234,22 +236,8 @@ object AocPoster : Feature {
 
                 appendLine("Report your benchmark results with `/${ReportBenchmark.name} <day> <part> <time in ms>` (averaging many runs, reading input from memory & JIT warmup allowed)!")
 
-                if (yesterdaysBenchmarkResults?.get(1) != null || yesterdaysBenchmarkResults?.get(2) != null) {
-                    appendLine("## Benchmark results from yesterday (Day ${day - 1})")
-
-                    yesterdaysBenchmarkResults[1]?.let {
-                        appendLine("### Part 1")
-                        append(it.toDiscordMarkdown())
-                    }
-
-                    yesterdaysBenchmarkResults[2]?.let {
-                        appendLine("### Part 2")
-                        append(it.toDiscordMarkdown())
-                    }
-                }
-
                 if (todaysBenchmarkResults?.get(1) != null || todaysBenchmarkResults?.get(2) != null) {
-                    appendLine("## Benchmark results from today (Day $day)")
+                    appendLine("## Benchmark results from today")
 
                     todaysBenchmarkResults[1]?.let {
                         appendLine("### Part 1")
@@ -267,16 +255,63 @@ object AocPoster : Feature {
                 }
             }
             listOfNotNull(
-                yesterdaysBenchmarkResults?.get(1)?.plot(),
-                yesterdaysBenchmarkResults?.get(2)?.plot(),
                 todaysBenchmarkResults?.get(1)?.plot(),
                 todaysBenchmarkResults?.get(2)?.plot(),
             ).also { delay(500.milliseconds) }.forEach {
                 addFile(it)
                 CoroutineScope(Dispatchers.Default).launch {
                     delay(20.seconds)
-                    it.deleteExisting()
+                    try {
+                        it.deleteExisting()
+                    } catch (e: NoSuchFileException) {
+                        logger.info { "Tried to delete file but it was already gone" }
+                    }
                 }
+            }
+        }
+
+        val hasBenchmarkResultsForYesterday =
+            yesterdaysBenchmarkResults?.get(1) != null || yesterdaysBenchmarkResults?.get(2) != null
+        if (hasBenchmarkResultsForYesterday) {
+            try {
+                channel.activeThreads.first {
+                    if (it.name == "Day ${day - 1}") {
+                        it.createMessage {
+                            content = buildString {
+                                appendLine("## Benchmark results from yesterday (Day ${day - 1}) after another 24h")
+
+                                yesterdaysBenchmarkResults?.get(1)?.let {
+                                    appendLine("### Part 1")
+                                    append(it.toDiscordMarkdown())
+                                }
+
+                                yesterdaysBenchmarkResults?.get(2)?.let {
+                                    appendLine("### Part 2")
+                                    append(it.toDiscordMarkdown())
+                                }
+                            }
+                            listOfNotNull(
+                                yesterdaysBenchmarkResults?.get(1)?.plot(),
+                                yesterdaysBenchmarkResults?.get(2)?.plot(),
+                            ).also { delay(500.milliseconds) }.forEach {
+                                addFile(it)
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    delay(20.seconds)
+                                    try {
+                                        it.deleteExisting()
+                                    } catch (e: NoSuchFileException) {
+                                        logger.info { "Tried to delete file but it was already gone" }
+                                    }
+                                }
+                            }
+                        }
+                        true
+                    } else {
+                        false
+                    }
+                }
+            } catch (e: NoSuchElementException) {
+                logger.info { "No thread found for yesterday" }
             }
         }
     }

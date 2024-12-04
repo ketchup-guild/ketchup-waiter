@@ -21,7 +21,7 @@ dependencies {
 
     implementation("com.mohamedrejeb.ksoup:ksoup-html:0.4.1")
 
-    implementation("dev.kord:kord-core:0.14.0")
+    implementation("dev.kord:kord-core:0.15.0")
 
     val exposedVersion = "0.47.0"
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
@@ -42,17 +42,19 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
 
     val ktorVersion = "3.0.2"
-
     runtimeOnly("io.ktor:ktor-client-core:$ktorVersion")
     runtimeOnly("io.ktor:ktor-client-okhttp:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-client-plugins:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
 
-    implementation(platform("com.aallam.openai:openai-client-bom:3.8.2"))
+    implementation(platform("com.aallam.openai:openai-client-bom:4.0.0-beta01"))
     implementation("com.aallam.openai:openai-client")
+    implementation("io.ktor:ktor-client-okhttp")
 
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 

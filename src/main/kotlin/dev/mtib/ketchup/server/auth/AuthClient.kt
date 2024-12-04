@@ -34,7 +34,7 @@ object AuthClient {
         return newToken
     }
 
-    fun checkToken(snowflake: String, token: String): Boolean {
+    private fun checkToken(snowflake: String, token: String): Boolean {
         val tokens =
             RedisClient.pool.jsonGet(TOKEN_KEY, Path2("$[${ketchupObjectMapper.writeValueAsString(snowflake)}]")).let {
                 if (it !is JSONArray) return false

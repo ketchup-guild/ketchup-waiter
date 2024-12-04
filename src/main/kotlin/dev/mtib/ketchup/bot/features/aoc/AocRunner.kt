@@ -23,7 +23,7 @@ suspend fun main() {
 
         val channel = kord.getChannelOf<TextChannel>(Snowflake(channelId))!!
 
-        AocPoster.post(channel, item, day = 1)
+        AocPoster.post(channel, item, day = 2)
         AocPoster.createDailyThread(channel, day = 1)
 
         kord.shutdown()
