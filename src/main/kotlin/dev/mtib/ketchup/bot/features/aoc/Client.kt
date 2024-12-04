@@ -4,11 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.mtib.ketchup.bot.utils.ketchupObjectMapper
 import dev.mtib.ketchup.bot.utils.ketchupZone
-import dev.mtib.ketchup.bot.utils.readOrNull
-import dev.mtib.ketchup.bot.utils.write
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -16,18 +15,24 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.toJavaInstant
 import kotlinx.datetime.toKotlinInstant
 import okhttp3.OkHttpClient
+import redis.clients.jedis.JedisPooled
 import java.time.OffsetDateTime
-import kotlin.io.path.Path
 import kotlin.time.Duration.Companion.seconds
 
 object Client {
     private val httpClient = OkHttpClient().newBuilder().followRedirects(false).build()
     private val cacheMutex = Mutex()
     private const val MAX_AGE_SECONDS = 900
-    private const val CACHE_FILE = "aoc.json"
     private val logger = KotlinLogging.logger {}
 
-    private val cachePath by lazy { Path(CACHE_FILE) }
+    private val redisCache by lazy {
+        System.getenv("REDIS_AOC_CACHE") ?: error("Missing REDIS_AOC_CACHE, like 'aoc:ketchup:cache'")
+    }
+
+    private val redisClient by lazy {
+        val redisUrl = System.getenv("REDIS_URL") ?: error("Missing REDIS_URL, like 'redis://localhost:6379'")
+        JedisPooled(redisUrl)
+    }
 
     class Cache @JsonCreator private constructor(
         @JsonProperty("items")
@@ -74,15 +79,19 @@ object Client {
 
         companion object {
             @JsonIgnore
-            fun empty() = Cache()
+            fun empty(): Cache = Cache()
 
             @JsonIgnore
-            fun get() = cachePath.readOrNull<Cache>() ?: empty()
+            fun get(): Cache = run {
+                redisClient.jsonGet(redisCache)?.let {
+                    ketchupObjectMapper.convertValue(it)
+                } ?: empty()
+            }
         }
 
         @JsonIgnore
         fun save() {
-            cachePath.write(this)
+            redisClient.jsonSet(redisCache, ketchupObjectMapper.writeValueAsString(this))
         }
 
         @JsonIgnore

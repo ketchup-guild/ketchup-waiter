@@ -33,6 +33,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
 
     implementation("org.xerial:sqlite-jdbc:3.45.1.0")
+    implementation("redis.clients:jedis:5.2.0")
 
     val jacksonVersion = "2.18.2"
     implementation("com.fasterxml.jackson:jackson-bom:$jacksonVersion")

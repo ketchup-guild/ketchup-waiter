@@ -2,6 +2,7 @@ package dev.mtib.ketchup.bot.interactions.handlers
 
 import dev.kord.common.Locale
 import dev.kord.core.Kord
+import dev.kord.core.behavior.channel.createMessage
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ActionInteractionCreateEvent
 import dev.kord.rest.builder.interaction.GlobalChatInputCreateBuilder
@@ -12,6 +13,7 @@ import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getDou
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction.Companion.getLongOptionByName
 import dev.mtib.ketchup.bot.utils.ketchupZone
 import dev.mtib.ketchup.bot.utils.now
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.time.Duration.Companion.milliseconds
 import dev.mtib.ketchup.bot.features.aoc.Client as AocClient
 
@@ -22,6 +24,7 @@ object ReportBenchmark : Interaction {
         get() = "aoc_benchmark"
     override val description: String
         get() = "Report a benchmark result"
+    private val logger = KotlinLogging.logger {}
 
     private const val DAY_VAR = "part_1"
     private const val PART_VAR = "part_2"
@@ -66,13 +69,20 @@ object ReportBenchmark : Interaction {
             return
         }
 
-        AocClient.recordBenchmarkResult(
-            event.interaction.user.id.value.toString(),
-            ketchupZone.now().year.toString(),
-            day,
-            part,
-            timeMs
-        )
+        try {
+            AocClient.recordBenchmarkResult(
+                event.interaction.user.id.value.toString(),
+                ketchupZone.now().year.toString(),
+                day,
+                part,
+                timeMs
+            )
+        } catch (e: Exception) {
+            r.respond { content = "Failed to record benchmark" }
+            event.interaction.channel.createMessage { content = "Encountered an error: " + e.message }
+            logger.error(e) { "Failed to record benchmark" }
+            return
+        }
 
         val duration = timeMs.milliseconds
 
