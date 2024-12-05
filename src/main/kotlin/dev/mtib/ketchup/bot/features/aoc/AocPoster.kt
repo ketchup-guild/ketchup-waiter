@@ -98,7 +98,7 @@ object AocPoster : Feature {
     suspend fun createDailyThread(channel: TextChannel, day: Int = ketchupZone.now().dayOfMonth) {
         val name = "Day $day"
         val dailyThread = channel.activeThreads.firstOrNull() { it.name == name }
-        (dailyThread ?: channel.startPublicThread("Day $day") {
+        (dailyThread ?: channel.startPublicThread(name) {
             autoArchiveDuration = ArchiveDuration.from(3.days)
         }).let {
             Storage().withOpenAi { openAi, textModel, imageModel ->
