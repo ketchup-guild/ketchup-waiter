@@ -8,6 +8,7 @@ import dev.kord.core.on
 import dev.mtib.ketchup.bot.interactions.handlers.*
 import dev.mtib.ketchup.bot.interactions.interfaces.Interaction
 import dev.mtib.ketchup.bot.utils.isGod
+import dev.mtib.ketchup.server.KordContainer
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 object Interactions {
@@ -51,6 +52,7 @@ object Interactions {
                     content = "Shutting down"
                 }
                 kord.shutdown()
+                KordContainer.close()
             }
         }
     }

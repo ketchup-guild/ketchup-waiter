@@ -1,0 +1,20 @@
+meta {
+  name: create
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseurl}}/aoc/benchmark/user/{{snowflake}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "year": 2024,
+    "day": 3,
+    "part": 1,
+    "time_ms": 1234.56
+  }
+}

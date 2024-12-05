@@ -19,6 +19,7 @@ import kotlinx.datetime.toKotlinInstant
 import okhttp3.OkHttpClient
 import org.json.JSONArray
 import redis.clients.jedis.json.Path2
+import java.time.Instant
 import java.time.OffsetDateTime
 import kotlin.time.Duration.Companion.seconds
 
@@ -174,7 +175,14 @@ object Client {
         }
     }
 
-    suspend fun recordBenchmarkResult(userSnowflake: String, event: String, day: Int, part: Int, timeMs: Double) {
+    suspend fun recordBenchmarkResult(
+        userSnowflake: String,
+        event: String,
+        day: Int,
+        part: Int,
+        timeMs: Double
+    ): Instant {
+        val time = Instant.now()!!
         cacheMutex.withLock {
             Cache.get().run {
                 copy(
@@ -184,11 +192,12 @@ object Client {
                         day = day,
                         part = part,
                         timeMs = timeMs,
-                        timestamp = Clock.System.now().toJavaInstant()
+                        timestamp = time
                     )
                 )
             }.save()
         }
+        return time
     }
 
     /**
@@ -250,6 +259,20 @@ object Client {
             }
 
             return item
+        }
+    }
+
+    suspend fun deleteByUserSnowflakeAndTimestamp(snowflake: String, timestamp: Long): Int {
+        return cacheMutex.withLock {
+            val (newCache, count) = Cache.get().run {
+                val newBenchmarks =
+                    benchmarks.filter { it.userSnowflake != snowflake || timestamp != it.timestamp.epochSecond }
+                copy(
+                    benchmarks = newBenchmarks
+                ) to (benchmarks.size - newBenchmarks.size)
+            }
+            newCache.save()
+            count
         }
     }
 }

@@ -1,0 +1,23 @@
+meta {
+  name: announce
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseurl}}/aoc/announce/{{channelsnowflake}}/{{snowflake}}/:day
+  body: text
+  auth: inherit
+}
+
+params:path {
+  day: 5
+}
+
+body:text {
+  Hello **world**!
+}
+
+vars:pre-request {
+  : 
+}

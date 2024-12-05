@@ -1,72 +1,73 @@
 package dev.mtib.ketchup.server.auth
 
-import dev.mtib.ketchup.bot.utils.ketchupObjectMapper
 import dev.mtib.ketchup.common.RedisClient
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.json.JSONArray
-import org.json.JSONObject
-import redis.clients.jedis.json.JsonSetParams
-import redis.clients.jedis.json.Path2
+import kotlinx.coroutines.withContext
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
+import kotlin.time.Duration.Companion.days
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 object AuthClient {
     private const val TOKEN_KEY = "auth:ketchup:tokens"
+    val validity = 365.days
 
     @OptIn(ExperimentalUuidApi::class)
-    fun createToken(snowflake: String): String {
-        val newToken = Uuid.random().toHexString()
-        RedisClient.pool.pipelined().apply {
-            jsonSet(
-                TOKEN_KEY,
-                Path2.ROOT_PATH,
-                JSONObject().put(snowflake, JSONArray()),
-                JsonSetParams.jsonSetParams().nx()
-            )
-            jsonArrAppend(
-                TOKEN_KEY,
-                Path2("$[${ketchupObjectMapper.writeValueAsString(snowflake)}]"),
-                ketchupObjectMapper.writeValueAsString(newToken)
-            )
-        }.sync()
+    suspend fun createToken(snowflake: String): String {
+        val newToken = Uuid.random().toString()
+        withContext(RedisClient.dispatcher) {
+            RedisClient.pool.pipelined().apply {
+                hset(
+                    TOKEN_KEY,
+                    snowflake,
+                    newToken
+                )
+                hexpire(
+                    TOKEN_KEY,
+                    365.days.inWholeSeconds,
+                    snowflake
+                )
+            }.sync()
+        }
         return newToken
     }
 
-    private fun checkToken(snowflake: String, token: String): Boolean {
-        val tokens =
-            RedisClient.pool.jsonGet(TOKEN_KEY, Path2("$[${ketchupObjectMapper.writeValueAsString(snowflake)}]")).let {
-                if (it !is JSONArray) return false
-                it
-            }.toList()
-        return tokens.filterIsInstance<List<String>>().flatten().contains(token)
+    private suspend fun checkToken(snowflake: String, token: String): Boolean {
+        return withContext(RedisClient.dispatcher) {
+            RedisClient.pool.hget(TOKEN_KEY, snowflake) == token
+        }
     }
 
+    @OptIn(ExperimentalContracts::class)
     suspend fun RoutingContext.checkAuth(snowflake: String?): Boolean {
+        contract {
+            returns(true) implies (snowflake != null)
+        }
         if (snowflake == null) {
-            call.respond(mapOf("error" to "Missing identity"))
-            call.response.status(HttpStatusCode.Unauthorized)
+            call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing identity"))
             return false
         }
         val token = (call.request.headers["Authorization"].also {
             if (it == null) {
-                call.respond(mapOf("error" to "Missing Authorization header"))
-                call.response.status(HttpStatusCode.Unauthorized)
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing Authorization header"))
                 return false
             }
         }!!).let {
             Regex("Bearer (.+)").find(it)?.groupValues?.get(1).also {
                 if (it == null) {
-                    call.respond(mapOf("error" to "Invalid Authorization header: expected 'Bearer <token>'"))
-                    call.response.status(HttpStatusCode.Unauthorized)
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "Invalid Authorization header: expected 'Bearer <token>'")
+                    )
                     return false
                 }
             }!!
         }
         if (!checkToken(snowflake, token)) {
-            call.respond(mapOf("error" to "Invalid token"))
-            call.response.status(HttpStatusCode.Unauthorized)
+            call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid token"))
             return false
         }
 

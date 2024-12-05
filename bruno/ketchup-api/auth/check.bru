@@ -1,0 +1,11 @@
+meta {
+  name: check
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseurl}}/auth/check/{{snowflake}}
+  body: none
+  auth: inherit
+}
