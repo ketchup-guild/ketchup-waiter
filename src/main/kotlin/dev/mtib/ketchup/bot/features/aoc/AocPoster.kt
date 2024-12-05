@@ -19,6 +19,7 @@ import dev.mtib.ketchup.bot.utils.now
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import org.jetbrains.letsPlot.export.ggsave
 import org.jetbrains.letsPlot.geom.geomLine
 import org.jetbrains.letsPlot.geom.geomPoint
@@ -95,9 +96,11 @@ object AocPoster : Feature {
     }
 
     suspend fun createDailyThread(channel: TextChannel, day: Int = ketchupZone.now().dayOfMonth) {
-        channel.startPublicThread("Day $day") {
+        val name = "Day $day"
+        val dailyThread = channel.activeThreads.firstOrNull() { it.name == name }
+        (dailyThread ?: channel.startPublicThread("Day $day") {
             autoArchiveDuration = ArchiveDuration.from(3.days)
-        }.let {
+        }).let {
             Storage().withOpenAi { openAi, textModel, imageModel ->
                 openAi.chatCompletion(
                     ChatCompletionRequest(
@@ -275,39 +278,36 @@ object AocPoster : Feature {
         if (hasBenchmarkResultsForYesterday) {
             try {
                 channel.activeThreads.first {
-                    if (it.name == "Day ${day - 1}") {
-                        it.createMessage {
-                            content = buildString {
-                                appendLine("## Benchmark results from yesterday (Day ${day - 1}) after another 24h")
+                    it.name == "Day ${day - 1}"
+                }.also {
+                    it.createMessage {
+                        content = buildString {
+                            appendLine("## Benchmark results from yesterday (Day ${day - 1}) after another 24h")
 
-                                yesterdaysBenchmarkResults?.get(1)?.let {
-                                    appendLine("### Part 1")
-                                    append(it.toDiscordMarkdown())
-                                }
-
-                                yesterdaysBenchmarkResults?.get(2)?.let {
-                                    appendLine("### Part 2")
-                                    append(it.toDiscordMarkdown())
-                                }
+                            yesterdaysBenchmarkResults?.get(1)?.let {
+                                appendLine("### Part 1")
+                                append(it.toDiscordMarkdown())
                             }
-                            listOfNotNull(
-                                yesterdaysBenchmarkResults?.get(1)?.plot(),
-                                yesterdaysBenchmarkResults?.get(2)?.plot(),
-                            ).also { delay(500.milliseconds) }.forEach {
-                                addFile(it)
-                                CoroutineScope(Dispatchers.Default).launch {
-                                    delay(20.seconds)
-                                    try {
-                                        it.deleteExisting()
-                                    } catch (e: NoSuchFileException) {
-                                        logger.info { "Tried to delete file but it was already gone" }
-                                    }
+
+                            yesterdaysBenchmarkResults?.get(2)?.let {
+                                appendLine("### Part 2")
+                                append(it.toDiscordMarkdown())
+                            }
+                        }
+                        listOfNotNull(
+                            yesterdaysBenchmarkResults?.get(1)?.plot(),
+                            yesterdaysBenchmarkResults?.get(2)?.plot(),
+                        ).also { delay(500.milliseconds) }.forEach {
+                            addFile(it)
+                            CoroutineScope(Dispatchers.Default).launch {
+                                delay(20.seconds)
+                                try {
+                                    it.deleteExisting()
+                                } catch (e: NoSuchFileException) {
+                                    logger.info { "Tried to delete file but it was already gone" }
                                 }
                             }
                         }
-                        true
-                    } else {
-                        false
                     }
                 }
             } catch (e: NoSuchElementException) {
