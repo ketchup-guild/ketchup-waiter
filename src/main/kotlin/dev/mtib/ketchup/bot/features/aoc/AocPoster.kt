@@ -30,6 +30,7 @@ import org.jetbrains.letsPlot.letsPlot
 import org.jetbrains.letsPlot.themes.*
 import java.nio.file.NoSuchFileException
 import java.nio.file.Path
+import java.time.Instant
 import kotlin.io.path.Path
 import kotlin.io.path.deleteExisting
 import kotlin.time.Duration.Companion.days
@@ -215,6 +216,17 @@ object AocPoster : Feature {
             }
         }
 
+        fun Map<Int, Map<String, List<Client.Cache.BenchmarkReport>>>?.updatedSince(instant: Instant): Boolean {
+            if (this == null) {
+                return false
+            }
+            return this.values.any { userBenchmarks ->
+                userBenchmarks.values.any { reports ->
+                    reports.any { it.timestamp.isAfter(instant) }
+                }
+            }
+        }
+
         channel.createMessage {
             content = buildString {
                 appendLine("# Advent of Code ${eventData.event} leaderboard\n")
@@ -273,8 +285,18 @@ object AocPoster : Feature {
             }
         }
 
+        val yesterdaysPost = java.time.ZonedDateTime.of(
+            eventData.event.toInt(),
+            12,
+            day - 1,
+            20,
+            0,
+            0,
+            0,
+            ketchupZone,
+        )!!
         val hasBenchmarkResultsForYesterday =
-            yesterdaysBenchmarkResults?.get(1) != null || yesterdaysBenchmarkResults?.get(2) != null
+            yesterdaysBenchmarkResults.updatedSince(yesterdaysPost.toInstant())
         if (hasBenchmarkResultsForYesterday) {
             try {
                 channel.activeThreads.first {
