@@ -35,10 +35,43 @@ object AuthClient {
         return newToken
     }
 
+    private suspend fun checkToken(token: String): Boolean {
+        return withContext(RedisClient.dispatcher) {
+            RedisClient.pool.hvals(TOKEN_KEY).contains(token)
+        }
+    }
+
     private suspend fun checkToken(snowflake: String, token: String): Boolean {
         return withContext(RedisClient.dispatcher) {
             RedisClient.pool.hget(TOKEN_KEY, snowflake) == token
         }
+    }
+
+    sealed class Identity
+    data class User(val snowflake: String) : Identity()
+    data object Authenticated : Identity()
+
+    suspend fun RoutingContext.checkAuth(identity: Identity): Boolean {
+        return when (identity) {
+            is User -> checkAuth(identity.snowflake)
+            is Authenticated -> checkAuthByToken(getToken())
+        }
+    }
+
+    private suspend fun RoutingContext.checkAuthByToken(token: String?): Boolean {
+        if (token == null) {
+            call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing token"))
+            return false
+        }
+        return checkToken(token).also {
+            if (!it) {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid token"))
+            }
+        }
+    }
+
+    fun RoutingContext.getToken() = call.request.headers["Authorization"]?.let {
+        Regex("Bearer (.+)").find(it)?.groupValues?.get(1)
     }
 
     @OptIn(ExperimentalContracts::class)

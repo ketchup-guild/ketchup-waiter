@@ -29,3 +29,17 @@ Continue reading at:
 - [Inputs](./aoc/Input.md)
 
 or browse the folder structure inside the [docs](./) folder.
+
+### `POST /auth/check/:snowflake`
+
+- Requires bearer token
+
+Returns 200 and body is
+
+```json
+{
+  "success": true
+}
+```
+
+if authorization is correctly set up for user with snowflake `:snowflake`.

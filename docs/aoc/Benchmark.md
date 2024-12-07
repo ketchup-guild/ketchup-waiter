@@ -121,16 +121,83 @@ the request will be included in the message.
 }
 ```
 
-### `POST /auth/check/:snowflake`
+### `GET /aoc/benchmark/sum-of-best/:year`
 
 - Requires bearer token
 
-Returns 200 and body is
+Returns 200 and the sum of times for the last submission for each user. Includes summary of all the users who completed
+all the puzzles.
 
-```json
+```json5
 {
-  "success": true
+  "summary": {
+    "<discord_user_1>": {
+      "sum_ms": 21.095000000000002,
+      "sum_string": "21.095ms"
+    },
+    "<discord_user_2>": {
+      "sum_ms": 8.722,
+      "sum_string": "8.722ms"
+    }
+  },
+  // The most recent day with a submission
+  "required_up_to": {
+    "day": 5,
+    "part": 2
+  },
+  "complete": {
+    "<discord_user_1>": {
+      "user_snowflake": "<snowflake>",
+      "sum_ms": 21.095000000000002,
+      "included": [
+        {
+          "day": 1,
+          "part": 1,
+          "time_ms": 0.565
+        },
+        // ...
+        {
+          "day": 5,
+          "part": 2,
+          "time_ms": 5.03
+        }
+      ]
+    },
+    "<discord_user_2>": {
+      "user_snowflake": "<snowflake>",
+      "sum_ms": 8.722,
+      "included": [
+        {
+          "day": 1,
+          "part": 1,
+          "time_ms": 0.088
+        },
+        // ...
+        {
+          "day": 5,
+          "part": 2,
+          "time_ms": 4.103
+        }
+      ]
+    }
+  },
+  "honourable_mentions": {
+    "<discord_user_3>": {
+      "user_snowflake": "<snowflake>",
+      "sum_ms": 1234.56,
+      "sum_string": "1.234560s",
+      "missing": [
+        {
+          "day": 1,
+          "part": 1
+        },
+        // ...
+        {
+          "day": 5,
+          "part": 2
+        }
+      ]
+    }
+  }
 }
 ```
-
-if authorization is correctly set up for user with snowflake `:snowflake`.

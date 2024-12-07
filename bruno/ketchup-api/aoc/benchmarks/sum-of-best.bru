@@ -1,0 +1,15 @@
+meta {
+  name: sum-of-best
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseurl}}/aoc/benchmark/sum-of-best/:year
+  body: none
+  auth: inherit
+}
+
+params:path {
+  year: 2024
+}
