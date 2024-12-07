@@ -10,9 +10,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import dev.mtib.ketchup.bot.utils.ketchupObjectMapper
 import dev.mtib.ketchup.bot.utils.ketchupZone
 import dev.mtib.ketchup.common.RedisClient
+import dev.mtib.ketchup.common.RedisClient.redis
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.toJavaInstant
 import kotlinx.datetime.toKotlinInstant
@@ -172,6 +175,18 @@ object Client {
                     listeners = listeners.filter { it.snowflake != listener.snowflake || it.event != listener.event || it.ownerId != listener.ownerId }
                 )
             }.save()
+        }
+    }
+
+    suspend fun recordInput(userSnowflake: String, year: Int, day: Int, input: String) {
+        withContext(Dispatchers.redis) {
+            RedisClient.pool.hset("aoc:inputs", "$year:$day:$userSnowflake", input)
+        }
+    }
+
+    suspend fun retrieveInput(userSnowflake: String, year: Int, day: Int): String? {
+        return withContext(Dispatchers.redis) {
+            RedisClient.pool.hget("aoc:inputs", "$year:$day:$userSnowflake")
         }
     }
 

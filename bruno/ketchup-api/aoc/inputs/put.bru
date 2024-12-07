@@ -1,0 +1,21 @@
+meta {
+  name: put
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseurl}}/aoc/input/:snowflake/:year/:day
+  body: text
+  auth: inherit
+}
+
+params:path {
+  snowflake: {{snowflake}}
+  year: 2024
+  day: 7
+}
+
+body:text {
+  My test input
+}

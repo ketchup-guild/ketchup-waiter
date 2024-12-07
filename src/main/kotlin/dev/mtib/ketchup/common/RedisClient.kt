@@ -1,5 +1,6 @@
 package dev.mtib.ketchup.common
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import redis.clients.jedis.JedisPooled
 import java.util.concurrent.Executors
@@ -10,4 +11,7 @@ object RedisClient {
         JedisPooled(redisUrl)
     }
     val dispatcher = Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()
+
+    val Dispatchers.redis
+        get() = dispatcher
 }

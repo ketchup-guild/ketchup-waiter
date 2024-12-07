@@ -1,17 +1,8 @@
-# Benchmark API Documentation
+# Benchmark
 
 ## Getting authenticated
 
-Use the `/create token` command in the discord server. This will cause the bot to send you a DM with a token. Use this
-bearer token in the `Authorization` header of your requests.
-
-```http
-Authorization: Bearer <token>;
-```
-
-This bearer token is tied to your discord account's snowflake. Do not share this token with anyone.
-
-Note your discord snowflake id. It is required to call the API.
+Refer to the [Auth](../Auth.md) documentation for how to get authenticated.
 
 ## Endpoints
 

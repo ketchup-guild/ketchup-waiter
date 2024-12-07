@@ -31,20 +31,65 @@ object AocRoutes {
 
     fun Routing.registerAocRoutes() {
         route("/aoc") {
+            route("/input") {
+                put("/{snowflake}/{year}/{day}") {
+                    val snowflake = call.parameters["snowflake"] ?: run {
+                        call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing snowflake"))
+                        return@put
+                    }
+                    if (!checkAuth(snowflake)) {
+                        return@put
+                    }
+                    val year = call.parameters["year"]?.toIntOrNull() ?: run {
+                        call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing year"))
+                        return@put
+                    }
+                    val day = call.parameters["day"]?.toIntOrNull() ?: run {
+                        call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing day"))
+                        return@put
+                    }
+
+                    val input = call.receiveText()
+                    AocClient.recordInput(snowflake, year, day, input)
+                    call.respond(mapOf("message" to "ok"))
+                }
+
+                get("/{snowflake}/{year}/{day}") {
+                    val snowflake = call.parameters["snowflake"] ?: run {
+                        call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing snowflake"))
+                        return@get
+                    }
+                    if (!checkAuth(snowflake)) {
+                        return@get
+                    }
+                    val year = call.parameters["year"]?.toIntOrNull() ?: run {
+                        call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing year"))
+                        return@get
+                    }
+                    val day = call.parameters["day"]?.toIntOrNull() ?: run {
+                        call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing day"))
+                        return@get
+                    }
+
+                    val input = AocClient.retrieveInput(snowflake, year, day)
+                    if (input == null) {
+                        call.respond(HttpStatusCode.NotFound, mapOf("error" to "Input not found"))
+                    } else {
+                        call.respond(input)
+                    }
+                }
+            }
             post("/announce/{aocChannelSnowflake}/{userSnowflake}/{day}") {
                 val aocChannelSnowflake = call.parameters["aocChannelSnowflake"] ?: run {
-                    call.respond(mapOf("error" to "Missing aocChannelSnowflake"))
-                    call.response.status(HttpStatusCode.BadRequest)
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing aocChannelSnowflake"))
                     return@post
                 }
                 val userSnowflake = call.parameters["userSnowflake"] ?: run {
-                    call.respond(mapOf("error" to "Missing userSnowflake"))
-                    call.response.status(HttpStatusCode.BadRequest)
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing userSnowflake"))
                     return@post
                 }
                 val day = call.parameters["day"]?.toIntOrNull() ?: run {
-                    call.respond(mapOf("error" to "Missing day"))
-                    call.response.status(HttpStatusCode.BadRequest)
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing day"))
                     return@post
                 }
                 if (!checkAuth(userSnowflake)) {
@@ -53,13 +98,11 @@ object AocRoutes {
 
                 KordContainer.get().let { kord ->
                     val channel = kord.getChannelOf<TextChannel>(Snowflake(aocChannelSnowflake)) ?: run {
-                        call.respond(mapOf("error" to "Channel not found"))
-                        call.response.status(HttpStatusCode.NotFound)
+                        call.respond(HttpStatusCode.NotFound, mapOf("error" to "Channel not found"))
                         return@post
                     }
                     val thread = channel.activeThreads.firstOrNull { it.name == "Day $day" } ?: run {
-                        call.respond(mapOf("error" to "Thread not found"))
-                        call.response.status(HttpStatusCode.NotFound)
+                        call.respond(HttpStatusCode.NotFound, mapOf("error" to "Thread not found"))
                         return@post
                     }
                     thread.createMessage(
