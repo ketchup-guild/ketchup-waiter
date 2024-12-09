@@ -3,7 +3,6 @@ package dev.mtib.ketchup.server.aoc
 import com.fasterxml.jackson.annotation.JsonProperty
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.channel.TextChannel
-import dev.mtib.ketchup.bot.utils.ketchupZone
 import dev.mtib.ketchup.server.KordContainer
 import dev.mtib.ketchup.server.auth.AuthClient
 import dev.mtib.ketchup.server.auth.AuthClient.checkAuth
@@ -15,6 +14,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.until
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import kotlin.time.Duration.Companion.milliseconds
@@ -167,7 +167,7 @@ object AocRoutes {
                     )
 
                     val puzzleRelease = ZonedDateTime.of(
-                        data.year, 12, data.day, 5, 0, 0, 0, ketchupZone
+                        data.year, 12, data.day, 0, 0, 0, 0, ZoneId.of("EST")
                     )
                     val durationSinceRelease = puzzleRelease.toInstant()
                         .until(time, ChronoUnit.SECONDS).seconds
