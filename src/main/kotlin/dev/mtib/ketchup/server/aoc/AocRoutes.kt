@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.until
+import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -158,19 +159,11 @@ object AocRoutes {
                         return@post
                     }
 
-                    val time = AocClient.recordBenchmarkResult(
-                        userSnowflake = snowflake,
-                        event = data.year.toString(),
-                        day = data.day,
-                        part = data.part,
-                        timeMs = data.timeMs
-                    )
-
                     val puzzleRelease = ZonedDateTime.of(
                         data.year, 12, data.day, 0, 0, 0, 0, ZoneId.of("EST")
                     )
                     val durationSinceRelease = puzzleRelease.toInstant()
-                        .until(time, ChronoUnit.SECONDS).seconds
+                        .until(Instant.now(), ChronoUnit.SECONDS).seconds
 
                     if (durationSinceRelease.isNegative()) {
                         call.respond(
@@ -182,6 +175,14 @@ object AocRoutes {
                         )
                         return@post
                     }
+
+                    val time = AocClient.recordBenchmarkResult(
+                        userSnowflake = snowflake,
+                        event = data.year.toString(),
+                        day = data.day,
+                        part = data.part,
+                        timeMs = data.timeMs
+                    )
 
                     call.respond(
                         mapOf(
