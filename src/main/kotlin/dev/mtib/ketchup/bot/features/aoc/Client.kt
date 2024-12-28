@@ -144,8 +144,15 @@ object Client {
 
         @JsonIgnore
         fun isCurrent(): Boolean {
-            val now = OffsetDateTime.now(ketchupZone)!!
-            return now.year.toString() == event && now.dayOfMonth <= 26 && now.monthValue == 12
+            return Companion.isCurrent(event)
+        }
+
+        companion object {
+            @JsonIgnore
+            fun isCurrent(event: String): Boolean {
+                val now = OffsetDateTime.now(ketchupZone)!!
+                return now.year.toString() == event && now.dayOfMonth <= 26 && now.monthValue == 12
+            }
         }
     }
 

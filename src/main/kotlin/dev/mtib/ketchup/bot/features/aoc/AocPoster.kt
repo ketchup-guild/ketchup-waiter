@@ -83,7 +83,7 @@ object AocPoster : Feature {
 
     suspend fun handleThreadListeners() {
         Client.getListeners().forEach { listener ->
-            if (listener.event.toInt() != ketchupZone.now().year) return@forEach
+            if (!Client.Leaderboard.isCurrent(listener.event)) return@forEach
             try {
                 val channel = kord.getChannelOf<TextChannel>(Snowflake(listener.snowflake)) ?: run {
                     Client.removeListener(listener)
