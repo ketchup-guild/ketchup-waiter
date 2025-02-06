@@ -190,7 +190,7 @@ object Planner : Feature {
                         Permission.ViewChannel,
                         Permission.ReadMessageHistory,
                         Permission.SendMessages,
-                    ) + user.getPermissions()
+                    ) + (channel.getPermissionOverwritesForMember(user.id)?.allowed ?: Permissions())
                 }
                 response.respond {
                     content = "You have been added to the channel"
