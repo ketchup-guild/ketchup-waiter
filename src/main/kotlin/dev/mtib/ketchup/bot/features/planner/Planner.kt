@@ -190,7 +190,7 @@ object Planner : Feature {
                         Permission.ViewChannel,
                         Permission.ReadMessageHistory,
                         Permission.SendMessages,
-                    )
+                    ) + user.getPermissions()
                 }
                 response.respond {
                     content = "You have been added to the channel"
