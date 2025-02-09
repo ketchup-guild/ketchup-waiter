@@ -36,12 +36,14 @@ object AuthClient {
     }
 
     private suspend fun checkToken(token: String): Boolean {
+        AuthMeter.incrementAuthTokenCounter()
         return withContext(RedisClient.dispatcher) {
             RedisClient.pool.hvals(TOKEN_KEY).contains(token)
         }
     }
 
     private suspend fun checkToken(snowflake: String, token: String): Boolean {
+        AuthMeter.incrementAuthTokenCounter()
         return withContext(RedisClient.dispatcher) {
             RedisClient.pool.hget(TOKEN_KEY, snowflake) == token
         }

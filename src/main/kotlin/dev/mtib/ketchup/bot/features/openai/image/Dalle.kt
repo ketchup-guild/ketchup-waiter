@@ -8,6 +8,7 @@ import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRank
 import dev.mtib.ketchup.bot.features.ketchupRank.utils.KetchupPaymentFailure
 import dev.mtib.ketchup.bot.features.ketchupRank.utils.payKetchup
 import dev.mtib.ketchup.bot.features.ketchupRank.utils.refundKetchup
+import dev.mtib.ketchup.bot.features.openai.meter.AiMeter
 import dev.mtib.ketchup.bot.features.openai.storage.DalleTrackingTable
 import dev.mtib.ketchup.bot.storage.Database
 import dev.mtib.ketchup.bot.storage.Storage
@@ -110,6 +111,7 @@ object Dalle {
                 cost = price
             )
         }
+        AiMeter.incrementAiCounter(AiMeter.AiType.IMAGE)
         return Either.Right(response)
     }
 }

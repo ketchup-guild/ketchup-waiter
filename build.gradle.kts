@@ -51,6 +51,8 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
+    implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.14.3")
 
     implementation(platform("com.aallam.openai:openai-client-bom:4.0.0-beta01"))
     implementation("com.aallam.openai:openai-client")

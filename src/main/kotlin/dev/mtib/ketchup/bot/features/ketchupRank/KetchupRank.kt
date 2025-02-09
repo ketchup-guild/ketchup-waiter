@@ -10,6 +10,7 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.event.message.ReactionAddEvent
 import dev.kord.core.on
 import dev.mtib.ketchup.bot.features.Feature
+import dev.mtib.ketchup.bot.features.ketchupRank.meter.KetchupMeter
 import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupGivingTable
 import dev.mtib.ketchup.bot.features.ketchupRank.storage.KetchupRankTable
 import dev.mtib.ketchup.bot.storage.Database
@@ -97,6 +98,7 @@ class KetchupRank : Feature {
                         "${senderKordUser.mention} tried to give $KETCHUP_EMOJI_STRING by reacting but is out of ketchup."
                 }
             } else {
+                KetchupMeter.incrementKetchupSpentCounter(givenKetchup.size, senderKordUser.username)
                 this.message.reply {
                     content =
                         "${senderKordUser.mention} gave ${givenKetchup.size} $KETCHUP_EMOJI_STRING to ${givenKetchup.joinToAndString { it.mention }}. (You have $ketchupRemaining $KETCHUP_EMOJI_STRING more to give today)"
@@ -149,15 +151,17 @@ class KetchupRank : Feature {
                     distribution
                 }
 
-                if (result.totalAwarding() == 0) {
+                val totalAwarding = result.totalAwarding()
+                if (totalAwarding == 0) {
                     message.reply {
                         content =
                             "${author.mention} tried to award $KETCHUP_EMOJI_STRING to ${targets.joinToAndString { it.mention }}, but is all out of ketchup to give. Help them out by reacting with $KETCHUP_EMOJI_STRING."
                     }
                 } else {
+                    KetchupMeter.incrementKetchupSpentCounter(totalAwarding, author.username)
                     message.reply {
                         content = buildString {
-                            append("${author.mention} awarded ${result.totalAwarding()} $KETCHUP_EMOJI_STRING! ")
+                            append("${author.mention} awarded $totalAwarding $KETCHUP_EMOJI_STRING! ")
                             append(result.awarding.entries.joinToAndString { (key, value) -> "$value to ${key.mention}" })
                             append(". You have ${result.remaining} $KETCHUP_EMOJI_STRING remaining. ")
                             append("Anyone can also react with $KETCHUP_EMOJI_STRING to award another bottle to the mentioned users.")
