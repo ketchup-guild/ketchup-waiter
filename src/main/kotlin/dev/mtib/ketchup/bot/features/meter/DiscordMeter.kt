@@ -12,12 +12,18 @@ import kotlinx.coroutines.sync.withLock
 
 object DiscordMeter : Feature {
     private val mutex = Mutex()
-    private val reactionMeters = mutableMapOf<String, Counter>()
+
+    data class ReactionKey(
+        val username: String,
+        val reaction: String
+    )
+
+    private val reactionMeters = mutableMapOf<ReactionKey, Counter>()
     private val messageMeters = mutableMapOf<String, Counter>()
 
     private suspend fun incrementReactionCounter(username: String, reaction: String, count: Int = 1) {
         mutex.withLock {
-            reactionMeters.getOrPut(username) {
+            reactionMeters.getOrPut(ReactionKey(username, reaction)) {
                 MeterRegistry.registry.counter("reaction_counter", "username", username, "reaction", reaction)
             }.increment(count.toDouble())
         }
