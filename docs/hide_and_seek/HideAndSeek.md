@@ -6,6 +6,8 @@ Inspired by Jet Lag: The Game's hide and seek series.
 
 This variant of the game is meant to be played in a single afternoon in Copenhagen, with 4–8 people.
 It needs to be simple, and ideally make each round take 1–3 hrs.
+There is one team of hiders (1 or more people) and one ore more teams of seekers (1 or more people).
+The teams of seekers compete to find the hiders as fast as possibile.
 
 Components:
 
@@ -29,10 +31,10 @@ At least one member of each team of seekers must share their location with the h
 are within 500 meters of the hiders the endgame starts.
 During the endgame the hiders are not allowed to move.
 
-- after the hiding period is over and the seekers are allowed to start moving
-- every 15 minutes after the hiding period: reminder post that the seekers are allowed to ask a question
+- after the 45-minute hiding period is over, the seekers are allowed to start moving and ask their first question
+- every 15 minutes after that: each seeker team is allowed to ask a question until the hiders are found
 
-Then there is a command to finish the game when a team of seekers have found the hiding team, this posts in all hiding
+Then there is a command to finish the game when a team of seekers has found the hiding team, this posts in all hiding
 team channels and now allows all remaining hiding teams to ask questions every 5 minutes
 
 From now on, until all seeking teams have posted that they found the hiders the bot will post the same reminder from
@@ -45,6 +47,8 @@ Then there is a command to randomly pick the next hiding team (out of the teams 
 After the bot notifies the seeking team channel, the seeking team can ask a question in their channel with the hiders.
 The hiders have to respond in the channel the question was asked within 10 minutes after the question was answered or
 incur a 30-minute penalty.
+If a seeker team does not ask a question within the 15-minute window, the question is expired, i.e., you can't save up
+questions.
 
 ### Temperature
 
