@@ -359,7 +359,9 @@ object HideAndSeek : Feature {
                         appendLine("- When a team finds the hiders, other teams can ask questions every ${shortenedQuestionInterval.toMinutes()} minutes")
                         appendLine("- Game ends when all teams find the hiders")
                         appendLine()
-                        appendLine("For full rules and question types, see: https://github.com/mtib/KetchupBot/blob/main/docs/hide_and_seek/HideAndSeek_short.md")
+                        appendLine("For full rules and question types, see: https://github.com/ketchup-guild/ketchup-waiter/blob/master/docs/hide_and_seek/HideAndSeek.md")
+                        appendLine()
+                        appendLine("You can ask your first question now!")
                     })
                 }
 
