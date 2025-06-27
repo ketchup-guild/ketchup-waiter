@@ -2,7 +2,6 @@ package dev.mtib.ketchup.bot.interactions.handlers
 
 import dev.kord.core.Kord
 import dev.kord.core.behavior.interaction.response.respond
-import dev.kord.core.entity.channel.TextChannel
 import dev.kord.core.event.interaction.ActionInteractionCreateEvent
 import dev.kord.rest.builder.interaction.GlobalChatInputCreateBuilder
 import dev.kord.rest.builder.interaction.string
@@ -63,7 +62,7 @@ object HideAndSeek : Interaction {
         }
 
         // Get the channel from the interaction
-        val channel = event.interaction.channel.asChannel() as TextChannel
+        val channel = event.interaction.channel.asChannel()
 
         // Create a temporary message to use with the HideAndSeek feature
         val tempMessage = channel.createMessage("Processing Hide and Seek command...")
@@ -83,14 +82,16 @@ object HideAndSeek : Interaction {
 
                 if (user == null) {
                     response.respond {
-                        content = "Error: User mention is missing or invalid. Please use the format `/hns player mention: @User team: teamname`."
+                        content =
+                            "Error: User mention is missing or invalid. Please use the format `/hns player mention: @User team: teamname`."
                     }
                     return@handleInteraction
                 }
 
                 if (team == null) {
                     response.respond {
-                        content = "Error: Team name is missing. Please use the format `/hns player mention: @User team: teamname`."
+                        content =
+                            "Error: Team name is missing. Please use the format `/hns player mention: @User team: teamname`."
                     }
                     return@handleInteraction
                 }
