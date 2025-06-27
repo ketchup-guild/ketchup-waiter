@@ -1,11 +1,14 @@
 package dev.mtib.ketchup.bot.interactions.interfaces
 
 import dev.kord.common.entity.CommandArgument
+import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
 import dev.kord.core.behavior.interaction.response.DeferredMessageInteractionResponseBehavior
+import dev.kord.core.entity.User
 import dev.kord.core.entity.interaction.ActionInteraction
 import dev.kord.core.event.interaction.ActionInteractionCreateEvent
 import dev.kord.rest.builder.interaction.GlobalChatInputCreateBuilder
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 interface Interaction {
     val visibility: Visibility
@@ -20,6 +23,8 @@ interface Interaction {
             PUBLIC,
             PRIVATE
         }
+
+        private val logger = KotlinLogging.logger { }
 
         private inline fun <reified T> List<CommandArgument<Any?>>.firstWithNameOrNull(name: String): T? {
             this.forEach { arg ->
@@ -112,6 +117,20 @@ interface Interaction {
 
         fun ActionInteraction.getBooleanOptionByName(name: String): Boolean? {
             return getOptionByNameOrNull(name)
+        }
+
+        suspend fun ActionInteraction.getUserOptionByName(name: String): User? {
+            val value = getOptionByNameOrNull<Any>(name) ?: return null
+            return when (value) {
+                is User -> value
+                is Long -> kord.getUser(Snowflake(value))
+                is String -> kord.getUser(Snowflake(value))
+                is Snowflake -> kord.getUser(value)
+                else -> {
+                    logger.warn { "Unable to parse user option $name, found: $value (${value::class.simpleName})" }
+                    null
+                }
+            }
         }
     }
 

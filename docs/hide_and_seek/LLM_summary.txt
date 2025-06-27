@@ -1,0 +1,94 @@
+# Hide and Seek Feature Implementation Summary
+
+## Overview
+The Hide and Seek feature is a Discord bot implementation of a real-world hide and seek game, inspired by Jet Lag: The Game's hide and seek series. The feature allows Discord users to organize and play hide and seek games in Copenhagen, with one team hiding and multiple teams seeking.
+
+## Architecture
+The implementation consists of two main components:
+
+1. **Feature Class**: `dev.mtib.ketchup.bot.features.hideandseek.HideAndSeek`
+   - Implements the `Feature` interface
+   - Contains the core game logic
+   - Manages game state, players, teams, and game flow
+   - Handles communication with Discord channels
+
+2. **Interaction Handler**: `dev.mtib.ketchup.bot.interactions.handlers.HideAndSeek`
+   - Implements the `Interaction` interface
+   - Defines and processes Discord slash commands
+   - Connects user commands to the feature's functionality
+   - Provides user-friendly responses
+
+## Game Flow
+The game follows this sequence:
+
+1. **Game Initialization**: A user starts a new game with `/hns start`
+2. **Player Registration**: Players are added to teams with `/hns player @mention team`
+3. **Team Assignment**: Teams are shuffled and roles (hiding/seeking) are assigned with `/hns shuffle`
+4. **Hiding Phase**: The hiding phase begins with `/hns hide`, creating private channels for each seeking team
+5. **Seeking Phase**: After the hiding phase ends, seeking teams can start looking for the hiding team
+6. **Question System**: Seeking teams can ask questions at regular intervals
+7. **Finding**: When a seeking team finds the hiding team, they report it with `/hns found team`
+8. **Game End**: The game ends when all seeking teams have found the hiding team
+
+## Commands Implemented
+- `/hns start` - Start a new Hide and Seek game
+- `/hns player @mention team` - Add a player to a team
+- `/hns shuffle` - Shuffle teams and assign hiding/seeking roles
+- `/hns hide` - Start the hiding phase
+- `/hns found team` - Mark a team as having found the hiding team
+
+## Technical Implementation Details
+
+### Environment Configuration
+The feature uses environment variables for configuration:
+- `HIDE_AND_SEEK_HIDING_PHASE_MINUTES` - Duration of the hiding phase (default: 30 minutes)
+- `HIDE_AND_SEEK_QUESTION_INTERVAL_MINUTES` - Interval between questions (default: 15 minutes)
+- `HIDE_AND_SEEK_SHORTENED_QUESTION_INTERVAL_MINUTES` - Shortened interval after a team finds the hiders (default: 5 minutes)
+
+### Discord Integration
+- Creates private channels for team communication
+- Uses Discord roles for permission management
+- Implements Discord slash commands with proper parameter types
+- Uses Discord's user mention system for player identification
+
+### Game State Management
+- Tracks game state using a `Game` inner class
+- Maintains player-team mappings
+- Manages team roles (hiding/seeking)
+- Tracks which teams have found the hiding team
+- Records timestamps for performance measurement
+
+### Asynchronous Operations
+- Uses Kotlin coroutines for asynchronous operations
+- Implements timers for phase transitions
+- Schedules regular question reminders
+
+## Design Decisions
+
+1. **Inner Game Class**: The `Game` class is implemented as an inner class of the `HideAndSeek` feature, allowing it to access feature-level configuration while encapsulating game-specific logic.
+
+2. **User Type for Mentions**: The player command uses Discord's user type for mentions, providing better type safety and user experience compared to string parsing.
+
+3. **Temporary Messages**: The interaction handler creates temporary messages that are deleted after processing, keeping the channel clean.
+
+4. **Concurrent Game Support**: The implementation supports multiple concurrent games across different guilds using a `ConcurrentHashMap`.
+
+5. **Team Rotation**: The system ensures that the same team cannot be the hiding team twice in a row, promoting fairness.
+
+6. **Dynamic Question Intervals**: Question intervals are shortened after a team finds the hiding team, increasing the pace for remaining teams.
+
+7. **Channel Permissions**: The system creates private channels with appropriate permissions for each team, ensuring that teams can only see their own communications.
+
+## Integration with Bot Framework
+The feature is integrated with the KetchupBot framework:
+- Registered as a feature in `KetchupBot.kt`
+- Added to the command registry in `Commands.kt`
+- Registered as an interaction handler in `Interactions.kt`
+- Implements the required interfaces for seamless integration
+
+## Documentation
+The feature is documented in:
+- `docs/hide_and_seek/HideAndSeek.md` - Full game rules
+- `docs/hide_and_seek/HideAndSeek_short.md` - Quick reference guide
+- `docs/hide_and_seek/HideAndSeek_transcript.md` - Original feature request transcript
+- `docs/hide_and_seek/LLM_summary.txt` - Implementation summary (this file)

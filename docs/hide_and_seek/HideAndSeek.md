@@ -1,75 +1,61 @@
-# mtib's Hide & Seek
+# Copenhagen Hide & Seek
 
-Inspired by Jet Lag: The Game's hide and seek series.
+*Inspired by Jet Lag: The Game's hide and seek series*
 
-## Overview
+## Game Overview
 
-This variant of the game is meant to be played in a single afternoon in Copenhagen, with 4–8 people.
-It needs to be simple, and ideally make each round take 1–3 hrs.
-There is one team of hiders (1 or more people) and one ore more teams of seekers (1 or more people).
-The teams of seekers compete to find the hiders as fast as possibile.
+A thrilling urban hide and seek game designed for 4-8 players in Copenhagen, played in rounds of 1-3 hours each. The
+game features one hiding team and multiple seeking teams competing to find the hiders as quickly as possible.
 
-Components:
+## Teams & Setup
 
-- Discord bot
-- Rules website
+- Players are divided into multiple teams (numbered or named)
+- One team is randomly selected as hiders
+- Remaining teams become seekers
+- Teams can have one or more players
+- Game coordination happens through a Discord bot
 
-## Discord bot
+## Game Flow
 
-Bot commands to:
+### 1. Hiding Phase (45 minutes)
 
-- register players
-- register or shuffle teams
-- randomly pick hiding team
-- start hiding period
+- Hiding team gets 45 minutes to reach their hiding location
+- Hiding area must be within 500 meters of a Metro station
+- Seekers must wait during this phase
 
-Starting the hiding period creates channels for each seeking team which contains them and the hiding team members.
-In each team channel the bot will regularly post updates:
-The hiding team has 45 minutes to get to their hiding area. The hiding area is defined as 500 meters centered on the
-nearest Metro station.
-At least one member of each team of seekers must share their location with the hider in the team's channel. Once they
-are within 500 meters of the hiders the endgame starts.
-During the endgame the hiders are not allowed to move.
+### 2. Seeking Phase
 
-- after the 45-minute hiding period is over, the seekers are allowed to start moving and ask their first question
-- every 15 minutes after that: each seeker team is allowed to ask a question until the hiders are found
+- Seekers can start moving after the hiding phaseends
+- Each seeking team must share their location in their team channel
+- When seekers get within 500m of hiders, "endgame" begins
+    - Hiders must stay completely still during endgame
+    - No moving, getting up, or turning around
 
-Then there is a command to finish the game when a team of seekers has found the hiding team, this posts in all hiding
-team channels and now allows all remaining hiding teams to ask questions every 5 minutes
+### 3. Question System
 
-From now on, until all seeking teams have posted that they found the hiders the bot will post the same reminder from
-above every five minutes, allowing them to ask many questions.
+- Seeking teams can ask one question every 15 minutes
+- Questions must be answered within 10 minutes
+    - 30-minute penalty for late answers
+- Questions cannot be saved up or banked
+- After one team finds the hiders, remaining teams can ask questions every 5 minutes
 
-Then there is a command to randomly pick the next hiding team (out of the teams that have hidden the least so far).
+## Question Types
 
-## Questions
+### Temperature Questions
 
-After the bot notifies the seeking team channel, the seeking team can ask a question in their channel with the hiders.
-The hiders have to respond in the channel the question was asked within 10 minutes after the question was answered or
-incur a 30-minute penalty.
-If a seeker team does not ask a question within the 15-minute window, the question is expired, i.e., you can't save up
-questions.
+- Compare two locations the seekers have visited in the last 30 minutes
+- Example: "Which is closer to you: Central Station or Trianglen Station?"
 
-### Temperature
+### Comparison Questions
 
-- Out of two places the seekers have been in within the last 30 minutes, ask which one is closer to the hider.
-    - Example: Out of the Central Station and Trianglen Station, which is closer to you?
+- Transport line service verification
+- Water proximity comparisons (measured as crow flies)
+- North/South position comparison
+- East/West position comparison
 
-### Comparison
+### Radar Questions
 
-- Does the most recently taken transport line service the station or stop the hider is hiding at.
-    - Example: Does the M1 service your stop.
-- Is the hiding team closer to water than the seekers?
-    - Example: We (the seekers) are 300 meters from our closest body of water are you (the hiders)
-      closer than that to your closest body of water.
-    - This distance is as the crow flies: use "Measure Distance" on Google Maps to determine this accurately.
-- Is the hiding team more northern or southern than the hiding team right now?
-- Is the hiding team more eastern or western than the hiding team right now?
-
-### Radar
-
-The seekers can pick the size of the radar from the list below, and ask if the hiders are within that distance from the
-seekers' current position:
+Ask if hiders are within a specific radius:
 
 - 500m
 - 1km
@@ -78,31 +64,33 @@ seekers' current position:
 - 4km
 - 5km
 
-This distance is as the crow flies: use "Measure Distance" on Google Maps to determine this accurately.
+### Photo Requests
 
-### Photo
+1. **Selfie**
+    - Text can be blurred/covered
+    - During endgame: Only one hider needed in photo
+2. **Straight Up Photo**
+    - Non-zoomed shot pointing upward
+3. **Tallest Building**
+    - From station exits
+    - Must show two sides and top
+    - Can be zoomed/cropped
+4. **Platform Photo**
+    - Must show three station features
+    - Text can be censored
+5. **Water Body Photo**
+    - Closest water body in zone
+6. **Street Photo**
+    - Straight across any street in zone
+    - Text can be censored
 
-- Selfie!
-    - The hiders have to take a selfie, they are allowed to blur or cover any text in the picture before sending it.
-    - Endgame: You may not move, get up or turn around, if there is more than one hider only one of the hiders needs to
-      be in the selfie.
-- Straight up photo.
-    - The hiders have to take a non-zoomed photo pointing straight up.
-- The tallest building visible from the train station
-    - The hiders have to take a photo of the building with the biggest apparent height visible from any exit of the
-      station their hiding zone is centered on. The picture can be zoomed or cropped, but must include two sides of the
-      building and the top (i.e. a top corner of the building). Any text may be censored.
-- Platform
-    - The hiders have to take a photo of the metro station. It must include three visible features (tiles, grafiti,
-      signs, architecture, ...). Text may be censored.
-- Body of water
-    - The hiders have to take a photo of the closest body of water (pond, lake, sea) in their zone (if there is one).
-- Street
-    - The hiders have to take a photo across one of the streets in their zone (standing on one side of the road, taking
-      a picture straight across it), text may be censored.
+### Oddball Questions
 
-### Oddball
+- First letter of closest street
+- Walking time estimates (via Google Maps)
 
-- First letter of the closest street.
-- How long would it get you to get to some place on foot, according to Google Maps?
-    - Example: How long would it take you to get to Tivoli by foot according to Google Maps
+## Game End
+
+- Game concludes when all seeking teams find the hiders
+- Teams are ranked by finding time
+- New hiding team is randomly selected (cannot be same as previous round)

@@ -7,6 +7,7 @@ import dev.kord.gateway.PrivilegedIntent
 import dev.mtib.ketchup.bot.commands.Command
 import dev.mtib.ketchup.bot.features.Feature
 import dev.mtib.ketchup.bot.features.aoc.AocPoster
+import dev.mtib.ketchup.bot.features.hideandseek.HideAndSeek
 import dev.mtib.ketchup.bot.features.ketchupRank.KetchupRank
 import dev.mtib.ketchup.bot.features.meter.DiscordMeter
 import dev.mtib.ketchup.bot.features.news.News
@@ -46,6 +47,7 @@ class KetchupBot(private val token: KetchupBotToken) {
             News,
             AocPoster,
             DiscordMeter,
+            HideAndSeek,
         ).onEach {
             logger.info { "Registering feature ${it::class.simpleName}" }
             it.register(kord)

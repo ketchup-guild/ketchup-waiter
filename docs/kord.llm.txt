@@ -1,0 +1,585 @@
+Kord: Kotlin Discord API Consumer SDK
+=====================================
+
+Overview
+--------
+Kord is a Kotlin-based SDK for interacting with the Discord API. As a consumer, you use Kord to build bots or applications that connect to Discord, listen for events, and respond with commands or interactive features.
+
+Key Concepts
+------------
+
+- **Kord**: The main entry point. Represents your Discord bot client.
+- **Events**: Actions in Discord (e.g., messages, reactions) you can subscribe to and handle.
+- **Commands**: User-triggered actions, typically through slash commands or message content.
+- **Arguments**: Data provided by users when invoking commands.
+- **Entities & Types**: Strongly typed representations of Discord objects (Message, User, Guild, etc).
+- **Interactions**: Discord’s modern mechanism for bot-user communication, including slash commands, buttons, and select menus.
+
+Quick Start Example
+-------------------
+
+```kotlin
+import dev.kord.core.Kord
+
+suspend fun main() {
+    val kord = Kord("your-bot-token-here")
+    kord.on<MessageCreateEvent> {
+        if (message.content == "!ping") {
+            message.channel.createMessage("Pong!")
+        }
+    }
+    kord.login()
+}
+```
+
+Event Handling
+--------------
+
+- Listen to events by subscribing to them and providing a handler:
+
+```kotlin
+kord.on<MessageCreateEvent> {
+    // Access event data, e.g., message, author, channel
+    if (message.content.startsWith("!hello")) {
+        message.channel.createMessage("Hello, ${message.author?.username}!")
+    }
+}
+```
+
+### Common Event Types
+
+- `MessageCreateEvent` – Fires on every new message
+- `ReactionAddEvent` – Fires when a reaction is added
+- `InteractionCreateEvent` – Fires on any interaction (slash command, button, etc.)
+- `GuildJoinEvent` – Fires when your bot joins a new server
+
+Commands & Arguments
+--------------------
+
+### Slash Commands
+
+- Register a slash command:
+
+```kotlin
+kord.createGuildApplicationCommand(guildId, "greet") {
+    description = "Greet a user"
+    string("name", "The name to greet") { required = false }
+}
+```
+
+- Handle slash command interactions:
+
+```kotlin
+kord.on<GuildChatInputCommandInteractionCreateEvent> {
+    if (interaction.command.rootName == "greet") {
+        val name = interaction.command.strings["name"] ?: "stranger"
+        interaction.respondPublic { content = "Hello, $name!" }
+    }
+}
+```
+
+### Arguments
+
+- Arguments are strongly typed and accessed through the interaction object:
+
+```kotlin
+val sides = interaction.command.integers["sides"] ?: 6
+```
+
+Supported argument types include:
+- `String`
+- `Boolean`
+- `Int`
+- `User`
+- `Channel`
+- `Role`
+- `Mentionable`
+- `Number`
+
+Interactions
+------------
+
+- Respond to button clicks, select menus, modals, and more:
+
+```kotlin
+kord.on<ButtonInteractionCreateEvent> {
+    interaction.respondPublic { content = "Button clicked!" }
+}
+```
+
+Types
+-----
+
+- All Discord entities (Message, User, Guild, Channel, etc.) are exposed as Kotlin types.
+- These types provide strongly-typed access to all properties and actions.
+
+Subcommands: Registration and Handling
+--------------------------------------
+
+### Registering Subcommands
+
+- Subcommands are registered by nesting command builders inside your slash command registration:
+
+```kotlin
+kord.createGuildApplicationCommand(guildId, "admin") {
+    description = "Admin commands"
+    subCommand("ban", "Ban a user from the guild") {
+        user("target", "The user to ban") { required = true }
+    }
+    subCommand("kick", "Kick a user from the guild") {
+        user("target", "The user to kick") { required = true }
+    }
+}
+```
+
+- You can organize subcommands in groups as well:
+
+```kotlin
+kord.createGuildApplicationCommand(guildId, "music") {
+    description = "Music commands"
+    group("playlist", "Manage playlists") {
+        subCommand("add", "Add a song to a playlist") {
+            string("song", "Song name") { required = true }
+        }
+        subCommand("remove", "Remove a song from a playlist") {
+            string("song", "Song name") { required = true }
+        }
+    }
+}
+```
+
+### Adding Arguments to Subcommands
+
+You can add various types of arguments to a subcommand by calling the corresponding argument builder inside the subCommand block. Each argument can be marked as required or optional.
+
+#### Supported Argument Types and Usage
+
+- **String argument**
+
+    ```kotlin
+    subCommand("echo", "Echo a message") {
+        string("text", "Text to echo") {
+            required = true
+        }
+    }
+    ```
+
+- **Integer argument**
+
+    ```kotlin
+    subCommand("set-age", "Set your age") {
+        integer("age", "Your age") {
+            required = true
+            minValue = 0
+            maxValue = 150
+        }
+    }
+    ```
+
+- **Boolean argument**
+
+    ```kotlin
+    subCommand("notify", "Enable or disable notifications") {
+        boolean("enabled", "Enable notifications?")
+    }
+    ```
+
+- **User argument**
+
+    ```kotlin
+    subCommand("greet", "Greet a user") {
+        user("target", "User to greet") {
+            required = true
+        }
+    }
+    ```
+
+- **Channel argument**
+
+    ```kotlin
+    subCommand("announce", "Send an announcement") {
+        channel("destination", "Channel to announce in") {
+            required = true
+        }
+    }
+    ```
+
+- **Role argument**
+
+    ```kotlin
+    subCommand("promote", "Promote a user") {
+        user("member", "Member to promote") { required = true }
+        role("role", "Role to assign") { required = true }
+    }
+    ```
+
+- **Mentionable argument**
+
+    ```kotlin
+    subCommand("mention", "Mention someone") {
+        mentionable("target", "Mention a user or role") { required = true }
+    }
+    ```
+
+#### Example: Subcommand with Multiple Argument Types
+
+```kotlin
+kord.createGuildApplicationCommand(guildId, "tools") {
+    description = "Various tools"
+    subCommand("send") {
+        string("message", "Message to send") { required = true }
+        user("recipient", "User to send to") { required = false }
+        boolean("urgent", "Mark as urgent")
+        integer("repeat", "Number of times to send") { required = false }
+    }
+}
+```
+
+Handling Subcommands with onSubcommand
+--------------------------------------
+
+- When a command with subcommands is invoked, you can use the `onSubcommand` function or inspect the subcommand context:
+
+```kotlin
+kord.on<GuildChatInputCommandInteractionCreateEvent> {
+    when (interaction.command.rootName) {
+        "tools" -> {
+            interaction.command.onSubcommand("send") {
+                val message = strings["message"] ?: ""
+                val recipient = users["recipient"]
+                val urgent = booleans["urgent"] ?: false
+                val repeat = integers["repeat"] ?: 1
+                repeat(repeat) {
+                    interaction.respondPublic { content = "${if (urgent) "[URGENT] " else ""}${recipient?.mention ?: ""} $message" }
+                }
+            }
+        }
+    }
+}
+```
+
+Example: Full Slash Command with Subcommands and Arguments
+---------------------------------------------------------
+
+```kotlin
+kord.createGuildApplicationCommand(guildId, "reminder") {
+    description = "Reminder utilities"
+    subCommand("set", "Set a new reminder") {
+        string("text", "Reminder text") { required = true }
+        integer("minutes", "In how many minutes?") { required = true }
+    }
+    subCommand("cancel", "Cancel a reminder") {
+        integer("id", "Reminder ID") { required = true }
+    }
+}
+
+kord.on<GuildChatInputCommandInteractionCreateEvent> {
+    if (interaction.command.rootName == "reminder") {
+        interaction.command.onSubcommand("set") {
+            val text = strings["text"]
+            val minutes = integers["minutes"]
+            interaction.respondPublic { content = "Reminder set: '$text' in $minutes minutes." }
+        }
+        interaction.command.onSubcommand("cancel") {
+            val id = integers["id"]
+            interaction.respondPublic { content = "Reminder $id cancelled." }
+        }
+    }
+}
+```
+
+Advanced: Registering Global Commands
+-------------------------------------
+
+- For commands available across all guilds:
+
+```kotlin
+kord.createGlobalApplicationCommand("info") {
+    description = "Get bot info"
+}
+```
+
+Advanced Usage & Best Practices
+-------------------------------
+
+### Responding Ephemerally
+
+- Make replies visible only to the invoking user using ephemeral responses:
+
+```kotlin
+interaction.respondEphemeral { content = "Only you can see this!" }
+```
+
+### Editing and Deleting Messages
+
+- You can edit or delete messages sent by your bot:
+
+```kotlin
+val sentMessage = message.channel.createMessage("Old content")
+sentMessage.edit { content = "New content" }
+sentMessage.delete()
+```
+
+### Using Coroutines and Concurrency
+
+- Kord is coroutine-based. Use `suspend` for all bot logic involving Discord:
+
+```kotlin
+suspend fun doBotWork() { ... }
+```
+
+- You can launch background tasks using Kotlin's `coroutineScope` or `launch`:
+
+```kotlin
+kord.on<MessageCreateEvent> {
+    launch {
+        // background work
+    }
+}
+```
+
+### Fetching and Caching Entities
+
+- Kord provides both cached and fresh access to entities:
+
+```kotlin
+val member = guild.getMemberOrNull(userId) // Cache
+val freshMember = guild.getMember(userId) // API call
+```
+
+### Handling Permissions
+
+- Always check permissions before performing sensitive actions:
+
+```kotlin
+if (member.getPermissions().contains(Permission.BanMembers)) {
+    // can ban
+}
+```
+
+### Logging and Debugging
+
+- Enable logging for troubleshooting:
+
+```kotlin
+System.setProperty("kord.logging.level", "DEBUG")
+```
+
+### Error Handling
+
+- Use try/catch to gracefully handle Discord API errors:
+
+```kotlin
+try {
+    message.channel.createMessage("Hello!")
+} catch (e: Exception) {
+    // handle error
+}
+```
+
+Tips & Best Practices
+---------------------
+
+- Always use `suspend` functions for Discord actions (sending messages, responding to interactions).
+- Use Kord’s event system to react to all forms of user input.
+- Register your commands with Discord and handle them in your bot’s code.
+- Use Kotlin’s type system for reliability and safety.
+- Keep your bot token secure and never commit it to version control.
+
+References
+----------
+
+- [Kord Documentation](https://kord.dev/)
+- [Discord API Docs](https://discord.com/developers/docs/intro)
+- [Kord Examples](https://github.com/kordlib/examples)
+
+
+## Extracting User Argument from a Subcommand Interaction
+
+When you define a subcommand with a user argument using Kord’s command builder:
+
+```kotlin
+kord.createGuildApplicationCommand(guildId, "admin") {
+    description = "Admin commands"
+    subCommand("ban", "Ban a user from the guild") {
+        user("target", "The user to ban") { required = true }
+    }
+}
+```
+
+### Accessing the User Argument After the Interaction
+
+When a user invokes the command (e.g., `/admin ban @SomeUser`), you receive a `GuildChatInputCommandInteractionCreateEvent`.
+To extract the user argument from the interaction:
+
+```kotlin
+kord.on<GuildChatInputCommandInteractionCreateEvent> {
+    if (interaction.command.rootName == "admin") {
+        interaction.command.onSubcommand("ban") {
+            // 'users' is a map of argument name to User
+            val targetUser = users["target"]
+            // You can now use 'targetUser' as a Kord User object
+            if (targetUser != null) {
+                interaction.respondPublic { content = "I will ban ${targetUser.mention}" }
+                // To access more info:
+                val username = targetUser.username
+                val id = targetUser.id
+                // Perform actions, e.g., ban:
+                // interaction.guild?.ban(targetUser.id)
+            } else {
+                interaction.respondEphemeral { content = "No user specified." }
+            }
+        }
+    }
+}
+```
+
+#### Detailed Steps
+
+1. **Receive the Event:**
+   Your event handler receives a `GuildChatInputCommandInteractionCreateEvent`.
+
+2. **Navigate to the Subcommand:**
+   Use `onSubcommand("ban")` (or check `subCommandName`) to ensure you’re handling the correct subcommand.
+
+3. **Extract the User Argument:**
+   - Use the `users` property, which is a map of argument names to `User` objects.
+   - Access the user with the key you specified in the command builder (here: `"target"`):
+     `val targetUser = users["target"]`
+
+4. **Use the User Object:**
+   - The value is a Kord `User` object, giving you access to all Discord user fields (`id`, `username`, `avatar`, etc.).
+   - You can mention the user in a message: `targetUser.mention`
+   - You can perform moderation actions such as banning, kicking, etc., using the user's ID and the guild context.
+
+5. **Null Safety:**
+   - If the argument was marked `required = true`, it should always be present, but null-check in case of edge cases.
+
+#### Example: Responding with the User’s Information
+
+```kotlin
+interaction.command.onSubcommand("ban") {
+    val user = users["target"]
+    if (user != null) {
+        interaction.respondPublic {
+            content = "Target user: ${user.username}#${user.discriminator} (ID: ${user.id})"
+        }
+    } else {
+        interaction.respondEphemeral { content = "Couldn't find the specified user." }
+    }
+}
+```
+
+#### Example: Moderation Action (Ban)
+
+```kotlin
+interaction.command.onSubcommand("ban") {
+    val user = users["target"]
+    val guild = interaction.guild
+    if (guild != null && user != null) {
+        guild.ban(user.id, "Banned via command")
+        interaction.respondPublic { content = "Banned ${user.mention}" }
+    }
+}
+```
+
+#### Notes
+
+- If you need a `Member` (for guild-specific data), use:
+  ```kotlin
+  val member = interaction.guild?.getMemberOrNull(user.id)
+  ```
+- All extracted users are of type `dev.kord.core.entity.User`.
+
+**Summary Table**
+
+| Step                  | Accessor/Property      | Description                                      |
+|-----------------------|-----------------------|--------------------------------------------------|
+| Get user argument     | `users["target"]`     | Returns a `User?` referenced by the argument key |
+| Mention in response   | `user?.mention`       | Use in response messages                         |
+| Get username/ID       | `user?.username`, `user?.id` | Access Discord user fields                |
+| Get guild member      | `guild?.getMemberOrNull(user.id)` | For member-specific info                  |
+
+For further reference, see the [Kord documentation on command arguments](https://kord.dev/guide/interactions/application-commands.html).
+
+## Creating a Private Thread with Kord
+
+Kord allows you to create private threads (sometimes called "private channel threads" or "private conversation threads") within text channels on Discord where only invited users can participate.
+
+### Requirements
+
+- Your bot must have the `Create Private Threads` and `Send Messages in Threads` permissions in the target channel.
+- The channel must be a text channel (not a DM or voice channel).
+
+### How to Create a Private Thread
+
+You use the `startPrivateThread` function on a `TextChannel` entity. Here’s a step-by-step example:
+
+```kotlin
+kord.on<MessageCreateEvent> {
+    if (message.content == "!private-thread") {
+        val channel = message.getChannelOrNull() as? TextChannel
+        if (channel != null) {
+            val thread = channel.startPrivateThread("Secret Discussion") {
+                // Optional: set a reason for audit logs
+                reason = "Confidential support"
+                // Optional: set auto-archive duration (default is 24 hours)
+                autoArchiveDuration = ThreadArchiveDuration.ThreeDays
+                // Optional: set an initial message in the thread
+                // This can be done after creation using thread.createMessage(...)
+            }
+            message.channel.createMessage("Private thread '${thread.name}' created!")
+        } else {
+            message.channel.createMessage("This command can only be used in text channels.")
+        }
+    }
+}
+```
+
+#### Key Points
+
+- `startPrivateThread` creates a thread that is private and invite-only.
+- The first argument is the thread name.
+- You may configure additional options such as auto-archive duration and audit log reason.
+- To add users to a private thread, use `thread.addMember(userId)`.
+
+#### Inviting Users to a Private Thread
+
+After creating the thread, you can invite users as follows:
+
+```kotlin
+val userToInvite: User = // ... get the user
+thread.addMember(userToInvite.id)
+```
+
+#### Sending Messages in the Thread
+
+```kotlin
+thread.createMessage("Welcome to the private thread!")
+```
+
+#### Example: Full Usage
+
+```kotlin
+kord.on<MessageCreateEvent> {
+    if (message.content == "!start-secret") {
+        val channel = message.getChannelOrNull() as? TextChannel
+        if (channel != null) {
+            val thread = channel.startPrivateThread("Secret Plans")
+            thread.createMessage("This is a private thread!")
+            thread.addMember(message.author!!.id)
+            message.channel.createMessage("Your private thread is ready!")
+        }
+    }
+}
+```
+
+#### Permissions
+
+- Only users with permission to manage threads or who are added to the thread can view and participate.
+- Private threads are not visible to everyone in the channel.
+
+### Reference
+
+- [Kord Thread Documentation](https://kord.dev/guide/entities/threads.html)
+- [Discord API: Start Thread](https://discord.com/developers/docs/resources/channel#start-thread-with-message)

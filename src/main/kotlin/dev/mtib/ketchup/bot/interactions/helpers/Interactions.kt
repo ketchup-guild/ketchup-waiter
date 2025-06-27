@@ -74,6 +74,7 @@ object Interactions {
         Ghost,
         Gpt,
         Help,
+        HideAndSeek,
         Leave,
         News,
         NorthernLights,

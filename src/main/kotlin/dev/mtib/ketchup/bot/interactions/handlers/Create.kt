@@ -28,17 +28,19 @@ object Create : Interaction {
 
     override suspend fun build(it: GlobalChatInputCreateBuilder) {
         super.build(it)
+        // Group related subcommands together
         it.group("event", "Create an event") {
+            // Define subcommand with clear description
             subCommand("private", "Create a private event idea channel") {
+                // Use descriptive parameter name and description
                 string("name", "Name of the event channel") {
                     required = true
                 }
             }
         }
 
-        it.subCommand("token", "Create a token") {
-
-        }
+        // Define standalone subcommand
+        it.subCommand("token", "Create a token")
     }
 
     override suspend fun handleInteraction(event: ActionInteractionCreateEvent, kord: Kord) {
@@ -80,9 +82,9 @@ object Create : Interaction {
                         ).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z"))
                     }.
                         Your account's snowflake id is `${snowflake}`.
-                    
+
                         Please keep this token safe and do not share it with anyone. Generating this token also invalidated any previous tokens you may have had.
-                        
+
                         If this wasn't you, please ignore this message.
                     """.trimIndent()
                 }
